@@ -1,0 +1,9 @@
+<?php
+session_start();
+$_SESSION['webinfo_admin_name']='';
+$_SESSION['webinfo_admin_pass']='';
+$_SESSION['webinfo_admin_time']='';
+$_SESSION['webinfo_admin_pop']='';
+header('location:login.php');
+exit;
+?>

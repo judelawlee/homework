@@ -1,0 +1,10 @@
+<?php
+/*
+	con_db_host=localhost;
+	con_db_id=root;
+	con_db_pass=19870701;
+	con_db_name=my_enterprise_web;
+	tablepre=web_;
+	db_charset=utf8;  
+*/
+?>
