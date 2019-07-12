@@ -1,0 +1,35 @@
+1.MySQL版本：
+	5.x：
+	5.0-5.1：早期产品的延续、升级维护
+	5.4-5.x：MySQL整合了三方公司的新存储引擎(推荐5.5，用的最多，稳定)
+软件：mysql-server-5.5.rpm
+	  mysql-client-5.5.rpm
+tar xvf *.rpm.gz(抽取出rpm文件)
+首先安装server，然后安装client
+rpm -ivh rpm软件名字	-i：install，安装软件	-v：verbose(显示更详细的输出) -h：hash(将安装进度列出哈希符号即#)显示安装进度
+中间如果报依赖错误，可以使用 yum install 包名，来解决软件依赖问题(Oracle Linux6.6)
+yum安装注意依赖次序，先按主要的依赖包，然后按次要的依赖的	eg.先安装gcc后安装libgcc
+如果提示安装文件冲突的话，需要卸载掉原来的文件，使用 yum -y remove 文件名
+kill -9 杀死进程
+安装时有日志提示，修改密码
+/usr/bin/mysqladmin -u root password 'new-password'(set password)
+启动：service mysql start
+关闭：service mysql stop
+重启：service mysql restart
+mysqladmin --version(验证安装成功与否)
+
+建议使用Oracle Linux6.6，可以使用yum安装，Oracle Linux4版本低了，挺古老的，还需要自己配yum比较麻烦，如果是Oracle Linux4安装
+mysql的话，需要自己手动下载依赖软件，不过也可以安装成功
+
+PLEASE REMEMBER TO SET A PASSWORD FOR THE MySQL root USER !
+To do so, start the server, then issue the following commands:
+
+/usr/bin/mysqladmin -u root password 'new-password'
+/usr/bin/mysqladmin -u root -h localhost.localdomain password 'new-password'
+
+Alternatively you can run:
+/usr/bin/mysql_secure_installation
+
+which will also give you the option of removing the test
+databases and anonymous user created by default.  This is
+strongly recommended for production servers.

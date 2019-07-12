@@ -1,0 +1,30 @@
+在计算机reboot后，登录MySQL可能会报错："/var/lib/mysql/mysql.sock不存在"
+--原因：是mysql服务没有启动
+解决：启动服务：1.每次使用前手动启动服务 /etc/init.d/mysql start
+			    2.开机自启	chkconfig mysql on	chkconfig mysql off
+			    检查开机是否自动启动：ntsysv
+给mysql的超级管理员root增加密码：	/usr/bin/mysqladmin -u root password 'new-password'
+
+登录：
+mysql -u root -p
+
+数据库存放目录：
+ps -ef | grep mysql 可以看到
+	数据库目录：	datadir=/var/lib/mysql
+	pid文件目录：--pid-file=/var/lib/mysql/bigdata01.pid
+	
+	MySQL核心目录：
+			/var/lib/mysql :mysql安装目录
+			/usr/share/mysql :配置文件
+			/usr/bin :命令目录(mysqladmin,mysqldump等命令)
+			/etc/init.d/mysql :myql启停脚本 
+	
+MySQL配置文件
+		my-huge.cnf	高端服务器 1-2G内存
+		my-large.cnf	中等规模
+		my-medium.cnf	一般
+		my-small.cnf	较小
+		但是以上配置文件mysql默认不能识别，默认只能识别 /etc/my.cnf
+		采用 my-huge.cnf
+		cp /etc/share/mysql/my-huge.cnf /etc/my.cnf
+		注意：mysql5.5默认配置文件 /etc/my.cnf;mysql5.6默认配置文件 /etc/mysql-default.cnf

@@ -1,0 +1,67 @@
+安装光盘的设置过程、安装过程、初始化过程
+安装RHEL6系统
+	————配置及安装过程
+Linux安装概述
+安装前的准备
+配置并执行安装程序
+初始化系统
+
+0.跳过检测
+1.installation type 选 server
+2.选 manually partition with disk druid
+磁盘分区：add partition
+/boot分区
+mount point /boot 
+文件类型	ext3
+size	256M
+/swap(交换区，虚拟内存区)
+no mount point
+文件类型	swap
+size	1024M
+/(根)分区
+mount point	/
+文件类型	ext3
+size	8000M
+/home分区
+mount point /home
+文件类型	ext3
+size	8000M
+3.网络设置
+取消选中configure using DHCP
+4.no firewall
+5.enable selinux 选中 disabled
+6.package group selection
+	选中x window system、gnome desktop environment和editor复选框
+	选中graphical internet、text-based internet、office/productivity和sound and video
+	选中graphics和sever configuration tools
+	选中ftp server和legacy network server(rsh-server和telnet server)
+	选中development tools、legacy software development和administration tools
+	选中printing tools、system tools(sysstat)
+	
+调高分辨率
+WMware tools安装
+cd /tmp	在这个目录下面安装 因为会产生很多临时文件
+ls -l /media/cdrom/
+tar zxf tar.gz(压缩包)	z：使用gzip压缩算法来压缩打包后的文件	x：从tar文件中抽取文件	f：指定归档文件	tar命令不需要前导"-"
+cd vmware-tools-distrib
+ls -l
+./vmware-install.p1(运行)
+
+配置网络连接
+/etc/sysconfig/network-script/ifcfg-eth0
+BOOTPROTO=static
+BROADCAST=192.168.1.255
+IPADDR=192.168.1.120
+NETMASK=255.255.255.0
+TYPE=Ethernet
+NETWORK=192.168.1.0
+GATEWAY=192.168.1.1
+ONBOOT=yes
+...
+
+nds
+/etc/resolv.conf
+nameserver 211.98.88.129
+nameserver 202.102.192.16
+nameserver 192.168.1.1
+search localhost
