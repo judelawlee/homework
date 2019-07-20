@@ -1,0 +1,29 @@
+在redis里面除了空格和换行符不能作为名字的组成内容外，其他内容都可以作为key的名字部分，名字长度不作要求。
+
+redis支持的数据类型
+	string	(binary-safe strings)
+	lists	(lists of binary-safe strings)
+	sets	(sets of binary-safe strings)
+	sorted sets	(sorted sets of binary-safe strings)
+	hash
+	
+我们在使用的时候可以自己定义一个key的格式
+key不要太长，占内存，查询慢。
+key不要太短，可读性不好。
+
+keys键操作
+exists keys 测试指定key是否存在
+del key1 key2 ... keyN	删除给定key
+type key	返回给定key的value类型
+keys pattern	返回匹配指定模式的所有key
+rename oldkey newkey	改名字
+dbsize	返回当前数据库的key数量
+expire key seconds	为key指定过期时间
+ttl key	返回key的剩余过期秒数
+select db-index	选择数据库
+move key db-index	将key从当前数据库移动到指定数据库
+flushdb 删除当前数据库中所有key
+flushall 删除所有数据库中的所有key	
+
+查看redis有多少个数据库
+	vi /usr/local/redis/redis.conf :set nu(显示行号)	/database(查找)	16个

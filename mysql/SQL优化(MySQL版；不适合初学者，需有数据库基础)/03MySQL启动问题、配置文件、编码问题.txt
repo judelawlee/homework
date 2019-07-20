@@ -14,17 +14,38 @@ ps -ef | grep mysql 可以看到
 	pid文件目录：--pid-file=/var/lib/mysql/bigdata01.pid
 	
 	MySQL核心目录：
-			/var/lib/mysql :mysql安装目录
-			/usr/share/mysql :配置文件
-			/usr/bin :命令目录(mysqladmin,mysqldump等命令)
-			/etc/init.d/mysql :myql启停脚本 
+		/var/lib/mysql :mysql安装目录
+		/usr/share/mysql :配置文件
+		/usr/bin :命令目录(mysqladmin,mysqldump等命令)
+		/etc/init.d/mysql :myql启停脚本 
 	
 MySQL配置文件
-		my-huge.cnf	高端服务器 1-2G内存
-		my-large.cnf	中等规模
-		my-medium.cnf	一般
-		my-small.cnf	较小
-		但是以上配置文件mysql默认不能识别，默认只能识别 /etc/my.cnf
-		采用 my-huge.cnf
-		cp /etc/share/mysql/my-huge.cnf /etc/my.cnf
-		注意：mysql5.5默认配置文件 /etc/my.cnf;mysql5.6默认配置文件 /etc/mysql-default.cnf
+	my-huge.cnf	高端服务器 1-2G内存
+	my-large.cnf	中等规模
+	my-medium.cnf	一般
+	my-small.cnf	较小
+	但是以上配置文件mysql默认不能识别，默认只能识别 /etc/my.cnf
+	采用 my-huge.cnf
+	cp /etc/share/mysql/my-huge.cnf /etc/my.cnf
+	注意：mysql5.5默认配置文件 /etc/my.cnf;mysql5.6默认配置文件 /etc/mysql-default.cnf
+
+默认端口3306
+mysql字符编码：
+	show variables like %char%
+	可以发现部分编码是latin，需要统一设置为utf-8
+	设置编码
+	vi /etc/my.cnf
+	[mysql]
+	default-character-set=utf8
+	[client]
+	default-character-set=utf8
+	[client]
+	character_set_server=utf8
+	character_set_client=utf8
+	collection_server=utf8_general_ci	集合排序规则
+重启mysql：service mysqk restart 
+show variables like %char%
+注意事项：修改编码，只对之后创建的数据库生效，因此我们建议在mysql安装完毕后，第一时间修改编码
+mysql：清屏 ctrl+l	system clear
+	
+

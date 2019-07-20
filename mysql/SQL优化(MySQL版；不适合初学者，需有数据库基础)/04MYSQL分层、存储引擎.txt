@@ -1,0 +1,21 @@
+原理
+	mysql逻辑分层
+	连接层：提供与客户端连接的服务
+	服务层：提供各种用户使用的接口、提供SQL优化器(mysql query optimizer)
+	引擎层：提供了工作存储数据的方式(InnoDB、MyISAM)
+			InnoDB(默认)：事务优先(适合高并发操作：行锁)
+			MyISAM：性能优先(表锁)
+	存储层：存储数据
+	
+	查询数据库引擎：支持哪些引擎？show engines;
+					查看当前使用的引擎 show variables like "%storage_engine%"
+	
+	create database myDB;
+	use myDB;
+	create table tb(
+		id int(4) auto_increment,
+		name varchar(5),
+		dept varchar(5),
+		primary key(id)
+	)ENGINE=MyISAM AUTO_INCREMENT=1 DEFAUL CHARSET=utf8;
+	

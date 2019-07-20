@@ -1,0 +1,33 @@
+安装redis
+	redis-2.6.14.tar.gz	源码编译安装
+	tar xvf redis-2.6.14.tar.gz
+	cd redis-2.6.14
+	make
+	cd src
+		redis-cli	终端操作脚本
+		redis-server	启动redis服务脚本文件
+		redis-benchmark	压力测试脚本
+		redis-check-aof
+		redis-check-dump	检测备份文件脚本
+	mkdir /usr/local/redis	创建redis运行目录并拷贝两个可执行文件过去
+	cp redis-server redis-cli	/usr/local/redis 
+	cd .. 退出src目录进入解压目录
+	cp redis.conf /usr/local/redis	redis配置文件	给redis运行目录再拷贝一个配置文件过去
+	cd /usr/local/redis
+	启动redis服务	./redis-server	前台启动
+	端口号 6379	pid	7236
+	vi redis.conf	修改redis.conf文件，改成后端启动redis服务
+	把	daemonize no 改成 daemonize yes
+	./redis-server redis.conf	后台启动 带配置文件一起执行
+
+简单使用
+	./redis-cli	登录redis
+	set name tom
+	set age 21
+	set addr beijing
+	get name
+	get age
+	get addr
+	
+	
+	
