@@ -1,0 +1,10 @@
+string类型操作
+	set key value	设置key对应的值为string类型的value
+	mset key1 value1 ... keyN valueN	一次设置多个key的值
+	mget key1 key2 ... keyN	一次获取多个key的值
+	incr key	对key的值做加加操作，并返回新的值
+	decr key	同上，但是做的减减操作
+	incrby key integer	同incr，加指定值
+	decrby key integer	同decr，减指定值
+	append key value	给指定key的字符串追加value
+	substr key start end	返回截取过的key的字符串值
