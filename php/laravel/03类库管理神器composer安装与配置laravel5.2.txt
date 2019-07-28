@@ -1,0 +1,21 @@
+composer下载
+	中文镜像	www.phpcomposer.com
+	安装，走默认配置就好，注意有一个依赖的php文件
+	cmd	执行composer命令	返回大概一个composer的字符(图标)	安装成功
+	
+composer安装laravel
+	直接下载安装(需要翻墙)
+		创建一个名为laravel的laravel项目
+			composer create-project laravel/laravel --prefer-dist(压缩版)
+		创建一个名为blog的laravel项目
+			composer create-project laravel/laravel blog(别名) --prefer-dist
+	使用composer镜像安装(不需要翻墙)
+		全局配置：将本地的composer服务全部转接到中文镜像。(推荐)
+			composer config -g repo.packagist composer https://packagist.phpcomposer.com
+			composer create-project laravel/laravel --prefer-dist(压缩版)
+			composer create-project laravel/laravel blog(别名) --prefer-dist
+			进入项目根目录，执行composer install(这一步就是按照依赖vendor文件夹)
+		单个项目配置：只对单个项目有效，其他项目不受影响。
+			进入项目文件夹，创建composer.json文件
+			执行	composer config -g repo.packagist composer https://packagist.phpcomposer.com 命令
+			即将当前项目转接到中文镜像(生成composer.json文件)

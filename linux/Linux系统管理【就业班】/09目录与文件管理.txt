@@ -1,0 +1,127 @@
+pwd/cd/ls、通配符、别名、复制/删除/移动
+目录与文件管理
+	————Linux的树形目录结构
+	Linux文档存放
+		最顶层为根目录(/)
+			-"计算机"-->"文件系统"
+	树形目录结构
+		就像一个倒挂的树
+			-路径之间分隔符：/	(注意windows的目录分隔符是\)
+			-层次深入
+											/(根目录)
+						/root	/boot	/dev	/home	/var	/usr	/tmp	...
+																  |
+																/usr/bin
+	认识目录用途
+		执行	man hier	命令
+			-查看关于目录结构的手册页
+	常见的一级目录
+		/bin、/sbin			存放基本命令、管理工具
+		/boot				存放系统启动文件，包括内核、引导配置等
+		/dev				存放各种设备文件
+		/etc				存放系统中的各种配置文件
+		/usr				存放共用的、只读的用户数据
+		/root				管理员root的家目录(默认的工作目录)
+		/home				存放个普通用户的家目录(比如/home/zhangsan)
+		
+	————查看及切换目录
+		查看工作目录
+			pwd —— print working directory
+				-用途:查看当前文件夹的路径
+				-格式：直接执行即可
+		切换工作目录
+			cd —— change directory			.	当前目录
+				-用途：进入到指定目录		..	父目录(上一次)
+				-格式：cd [目标文件夹]		-	前一个目录(返回)
+			eg. cd /etc/pki/CA/private	pwd
+		cd 不带参数默认进入用户的家目录	等于	cd ~(波浪号代表用户的家目录)
+	绝对&相对路径
+		绝对路径	可以准确描述文档的路径
+			-以/开始的文档路径，如/etc/pki/CA/private
+			-以~user开始的文档路径，如~zhangsan/.bashrc
+		相对路径：	相对简单，不是固定的
+			-以当前目录为参照的文档路径，如./、../
+	列出目录内容
+		ls——list
+			-格式：ls [选项]... [目录或文件]...
+		长用选项
+			-l：以长格式 
+			-A：包括以.开头的隐藏文件
+			-d：显示目录本身(而不是内容)的属性
+			-h：提供易读的容量单位(K、M等)
+				ls -l(当前目录)
+				ls -A(包括隐藏文件)
+				ls -lh
+	————通配符和命令别名
+		使用通配符
+			主要模式
+				-*：匹配任意多个字符	ls install*	[安装日志]	root家目录
+				-?：匹配单个字符	ls -lh install.???
+				-[a-z]：匹配连续多个字符中的一个	ls /dev/tty[1-6]
+				-{a,min,xy}：匹配不连续的多组字符串	ls -d /{bin,home,var}
+	查看命令别名
+		列出所有可用的命令别名
+			-格式：alias
+		查看指定的命令别名
+			-格式：alias 别名
+	定义命令别名
+		可以为复杂命令建立简短的别名
+			-格式：alias 别名="实际命令行"
+				alias myls='ls -lhA'
+	取消命令别名
+		新定义的别名只在当前或子环境有效
+			-退出当前终端即失效
+			-使用unalias可取消指定别名(带-a选项则取消所有)
+			mkdir——make directory
+				-用途：在指定路径新建文件夹
+	————创建目录及文件
+		新建文件夹
+				-格式：mkdir [-p] [/路径/]目录名...(如果要创建的文件夹的上层文件夹不存在，则创建失败，为避免这种情况，在创建多
+					层目录结构的时候，需要添加-p选项) 
+					ls -R /vod	-R表示递归
+					eg.mkdir -p /vod/movie/cartoon
+		新建空文件
+			touch命令
+				-用途：新建空文件，或更新文件时间戳
+				-格式:touch 文件名...
+					cd /vod/movie/cartoon
+					touch Mulan.rmvb NeZhaNaoHai.mp4
+					ls -lh *
+	————创建快捷方式
+		ln——link
+			-用途：为指定的目录或文件添加快捷方式(也成为软连接)
+			-格式：ln [-s] 源文件.. 链接文件路径	不指定链接文件名称，链接文件名称则与源文件名称一样
+				eg.ln -s /etc/sysconfig/network-script/ifcfg-eth0 /home/xuduo3
+				cat /home/xuduo3/ifcfg-eth0
+	————复制/删除/移动	
+		cp——copy
+			-格式：cp [选项]..源文件..目标路径
+		常用选项
+			-r：递归复制整个目录
+			-f：强制覆盖，不提示(与-i相对)	-i优先
+			-p：保持源文件的属性不变
+				eg.cd ~
+				cp install.log new.log
+				cp install.log new.log	y
+				cp /boot/grub /home/xuduo3/grubnew	失败omit(略过
+				cp -r /boot/grub /home/xuduo3/grubnew
+				mkdir /todir
+				cp -rf /boot install.log /todir
+				ls -l install.log new.log
+				cp -p install.log new2.log
+	删除文档
+		rm——remove
+			-格式：rm [选项]..文件或目录..
+		常用选项
+			-r：递归删除整个目录
+			-f：强制删除，不提示(与-i相对)	-f优先
+				rm -rf /todir/boot/
+	移动/该名文档
+		mv——move
+			-格式：mv [选项]..源文件..目标路径
+		常用选项：
+			-f：强制覆盖，不提示(与-i相对)
+			mv new.log myfile.txt
+			mv myfile.txt /todir
+			mv /todir/myfile.txt ./2015.txt
+			

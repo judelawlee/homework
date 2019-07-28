@@ -1,0 +1,35 @@
+查看cpu/内存/主机名/网卡地址/开关机
+查看系统信息
+查看内核版本
+	uname命令
+	-a：显示主机名等
+	-f：只显示内核版本
+查看主机名称
+	hostname
+		-查看主机的完整名称
+		-包括主机名称、所在域的名称
+查看本机的IP/MAC地址
+	ifconfig
+		-查看第一块网卡的IP/MAC地址
+		eth0(第一块网卡的名称
+		eth1(第二块网卡的名称)
+		ifconfig eth0
+/proc(系统正在运行的数据存在这里)
+查看cpu
+	cat /proc/cpuinfo
+查看内存信息
+	cat /proc/meminfo
+关机命令操作
+	shutdown -h now
+	poweroff
+	init 0
+重启的命令操作
+	shutdown -r now(开关机的原始程序)
+	reboot
+	init 6
+延时关机或重启
+	showdown的时机控制
+		-提前通知已登录的所有用户
+		-按ctrl+c键或者shutdown -c可取消延时关机
+		shutdown -h +15 'host will be shutdown!!'
+		shutdown -c(取消)延时关机或重启

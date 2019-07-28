@@ -1,0 +1,38 @@
+git&github
+初识git
+what is git?
+版本管理工具(VCS)
+	1.分布式版本控制
+	2.多个开发人员协调工作
+	3.有效监听谁作的修改
+	4.本地及远程操作
+git的基本命令操作
+basic commands
+	1.git init	初始化本地git仓库
+	2.git add <file>	添加文件
+	3.git status	查看状态
+	4.git commit	提交
+	5.git push	推送到仓库
+	6.git pull	从远程仓库拉取数据
+	7.git clone	从远程仓库拷贝数据
+安装git
+	1.mac
+	2.windows
+	git --version	查看安装成功与否
+创建一个文件夹	myapp
+进入myapp文件夹[命令行]
+git init
+git config --global user.name ...	配置用户名
+git config --global user.email ...	配置email
+git add index.html
+git status
+git rm --cached index.html	删掉上传
+git add *.html	上传所有html文件
+git status
+git add .	添加所有文件
+修改index.html	git status
+git commit	i	添加备注
+git status
+git commit -m "beizhu"
+
+

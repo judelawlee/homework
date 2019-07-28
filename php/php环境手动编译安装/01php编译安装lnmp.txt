@@ -1,3 +1,66 @@
 环境安装前的准备
 	做一个快照
 	安装gcc gcc-c++
+	
+Nginx安装及错误的解决
+	官网下载 nginx-1.10.3.tar.gz(stable version)
+	首先要给nginx创建一个用户
+	先创建一个组	group add www(创建一个www组)
+	ueradd -g www www -M -s /sbin/nologin(创建一个用户，属于www组，名字也叫www，不创建家目录，不让它登录：安全考虑)
+	这个用户是为nginx创建的
+	cat /etc/password(查看用户)
+	tar xvf nginx-1.10.3.tar.gz(解压) 
+	解压一个目录，然后进入这个目录
+	./configure --help
+	./configure --prefix=/usr/local/nginx(指定一个安装位置) --user=www --group=www --with-http_ssl_module(https模块)
+	--with-http_gzip_static_module(静态压缩模块) --with-pcre(正则表达式,rewrite要用到)
+	yum install pcre-devel -y(报错，安装pcre库)
+	yum install openssl-devel -y(报错，安装pcre库)[https基于openssl]
+	configure完成以后	make&&make install
+	echo $?(看有没有出错)
+	/usr/local/nginx [conf,html,sbin(nginx的二进制启动文件),logs]
+	启动nginx	./nginx(sbin目录)
+	ps -ef|grep nginx(检查nginx有没有启动成功)[两个进程]nginx机制，主进程以root用户运行，子进程以www用户运行
+	netstat -nltp(查看nginx端口)
+	访问html可能会报错，是因为防火墙
+	关闭防火墙
+	/etc/init.d/iptables stop(停一下防火墙)
+	
+下载php-5.6.30.tar.gz的
+	tar xvf php-5.6.30.tar.gz(解压)
+	进入解压后的目录
+	./configure --help
+	./configure --prefix=/usr/local/php --enable-fpm --with-fpm-user=www --with-fpm-group=www (以pfm进程运行php)
+	--with-config-file-path=/usr/local/php/etc(配置文件) --disable-ipv6 --with-libxml-dir --with-openssl(加密) --with-zlib(压缩)
+	--with-curl(curl函数要用到这个) --with-gd(gd库)	--with-jpeg-dir --with-png-dir --with-freetype-dir(字体)
+	--with-gettext --enable-mbstring(处理字符串) --with-mysql(mysql数据库，不是很安全) --with-mysqli 
+	--enable-embedded-mysqli --width-pdo-mysql --with-pcre-dir --enable-mysqlnd
+	报错(主要是因为缺少库)	需要什么装什么
+		yum install libxml2-devel -y
+		yum install libcurl-devel -y
+		yum install libjpeg-devel -y
+		yum install libpng-devel -y
+		yum install freetype-devel -y
+	echo $?
+	
+	安装好了以后需要配置php
+	php有两个配置文件
+	cd /usr/local/php/etc
+	php-fpm.conf.default	php进程的配置文件	mv php-fpm.conf.default php-fpm.conf
+	还有一个配置文件在源码里面
+	php.ini-development(开发环境)
+	php.ini-production(生产环境)
+	cp php.ini-development /usr/local/php/etc/php.ini
+	cd /usr/local/php/sbin(php启动的二进制文件)	./php-fpm(启动)(9000端口)
+	netstat -nltp(查看开了哪些端口)
+	
+	配置nginx.conf
+		找到#location ~ \.php$(/php 查找，把配置好的前面的井号去掉，打开php)
+		location前加个index.php index.html index.htm
+	配置好后重启nginx，先把nginx杀掉	killallnginx
+	
+	访问发现	file not found
+	修改nginx.conf php配置的地方把 include fastcig_paras 改成 include factcig.conf
+	ok
+	可以在试一下mysql是否连接上了，试了，连接上了
+	(测试环境这样就可以了，可是线上的还不行，还有一些细节需要调整[安全性等问题]，但是线下测试，都可以了)

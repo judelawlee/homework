@@ -1,0 +1,29 @@
+list类型其实就是一个双向链表，通过push pop操作从链表的头部或尾部添加删除数据，这使得list既可以用作栈，也可以用作队列。
+应用场合
+	需要节省资源的时候，索引也比较耗费系统资源，当查询影响到的数据比较多的时候
+
+通过list链表保存登录系统的最新五个用户信息：
+jim、xiaoli、jack、xiaoming、marry、tom
+	select 1	登录到第二个数据库进行操作
+	keys *	查看数据库中没有key
+	lpush newlogin jim	把tom加入链表
+	lpush newlogin xiaoli	...
+	lpush newlogin jack	...
+	lpush newlogin xiaoming	...
+	lpush newlogin marry	...
+	设置一个list链表key，newlogin，其中包含五个元素
+	lpush newlogin tom	
+	rpop newlogin jim	该链表每增加一个新元素，就删除一个旧元素
+	lrange newlogin 0 4	读取链表从第一个到第四个五个元素
+	<=>lrange newlogin 0 100
+	llen newlogin	返回key的元素个数
+	
+list类型操作
+	lpush key string	在key对应list的头部添加字符串元素
+	rpop key 从list的尾部删除元素，并返回删除元素
+	llen key 返回list的长度，key不存在返回0，如果key对应类型不是list返回错误
+	lrange key start end	返回指定区间内的元素，下标从0开始
+	rpush key string 同上，在尾部添加
+	lpop key	从list的头部删除元素，并返回删除元素
+	ltrim key start end	截取list，保留指定区间内元素
+	
