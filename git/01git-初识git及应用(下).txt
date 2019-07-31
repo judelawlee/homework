@@ -11,5 +11,6 @@
 	创建分支:git branch login	创建一个名为login的分支
 	切换分支：git checkout login
 	切换主线：git checkout master
+	合并分支：git merge login
 3.主线及分支的合并
 4.操作远程仓库
