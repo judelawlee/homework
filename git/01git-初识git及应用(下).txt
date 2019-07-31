@@ -17,3 +17,6 @@
 	git remote
 	git push
 	touch README.md	#myapp this is git
+	
+	cd myapp2
+	git clone url
