@@ -10,5 +10,6 @@
 	分支：使用分支不会影响主线
 	创建分支:git branch login	创建一个名为login的分支
 	切换分支：git checkout login
+	切换主线：git checkout master
 3.主线及分支的合并
 4.操作远程仓库
