@@ -1,4 +1,14 @@
 1.如何使用git忽略一下不想上传的文件
+	创建log.txt文件
+	git status
+	touch .gitignore(log.txt,/dir1)	忽略log.txt文件	忽略dir2
+	git status	发现log.txt不用上传了
+	创建文件夹dir1,在dir1中创建文件app1.js
+	创建文件夹dir2,在dir1中创建文件app2.js
 2.分支的使用
+	主线：没有任何问题的时候才会使用它
+	分支：使用分支不会影响主线
+	创建分支:git branch login	创建一个名为login的分支
+	切换分支：git checkout login
 3.主线及分支的合并
 4.操作远程仓库
