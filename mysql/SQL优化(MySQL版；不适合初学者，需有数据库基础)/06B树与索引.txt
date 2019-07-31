@@ -1,0 +1,43 @@
+					data1						data2
+			p1						p2							p3			
+	data3		data4		data5		data6			data7			data8		
+								......
+	
+Btree一般都是B+树，数据全部存放在叶节点
+B+中查询任意的数据次数：h次(B+树的高度)
+索引
+	分类：
+		主键索引：不能重复，不能为null
+		单值索引：单列，一个表可以有多个单值索引，
+		唯一索引：唯一索引不能重复，可以是null
+		复合索引：多个列构成的索引(相当于二级目录)，不一定都要用到
+	创建索引：
+		方式一：
+			create 索引类型 索引名 on 表(字段)
+			单值：
+			create index dept_index on tb(dept)
+			唯一：
+			create unique index name_index on tb(name)
+			复合索引：
+			create index dept_name_index on tb(dept,name)
+		方式二：
+			drop table tb;	删除索引
+			create tb ...
+			单值：
+			alter table tb add index dept_index(dept)
+			唯一：
+			alter table add unique index name_index(name)
+			复合索引：
+			alter tableadd index dept_name_index(dept,name)
+	ddl会自动提交，不需要commit
+	注意：如果一个字段是primary key，则该字段默认就是主键索引
+	删除索引：
+		drop index 索引名 on 表名
+		drop index name_index on tb;
+	查询索引：
+		show index from 表名
+		show index from tb \G(列换行)
+sql性能为
+	a.分析sql的执行计划：explain，可以模拟sql优化器执行sql语句，从而让开发人员知道自己编写的sql状况
+	b.mysql查询优化器会干扰我们的优化
+			

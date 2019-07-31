@@ -1,0 +1,47 @@
+set集合类型
+	redis的set是string类型的无序集合。
+	set元素最大可以包含(2的32次方-1)个元素
+	关于set集合类型除了基本的添加删除操作，其他有用的操作还包含集合的取并集(union)、交集(intersection)、差集(difference)
+	注意：每个集合中的各个元素不能重复。
+	该类型应用场合：qq好友推荐。
+	tom朋友圈(与某某是好友)：mary、jack、xiaoming、wang5、wang6
+	linken朋友圈(与某某是好友)：yuehan、xiaoxiong、luce、wang5、wang6
+	select 1	在第二个数据库进行操作
+	keys *
+	type newlogin
+set类型操作
+	sadd key member	添加一个string元素到key对应的set集合中，成功返回1，如果元素已经在集合中，返回0，key对应的set不存在返回错误
+	srem key member [member]	从key对应set中移除给定元素，成功返回1
+	smove p1 p2 member	从p1对应set中移除member并添加到p2对应set中
+	scard key	返回set的元素个数
+	sismember key member	判断member是否在set中
+	sinter key1 key2 ... keyN	返回所有给定key的交集
+	sunion key1 key2 ... keyN	返回所有给定key的并集
+	sdiff key1 key2 ... keyN	返回所有给定key的差集
+	smembers key	返回key对应set的所有元素，结果是无序的
+创建tomFri集合类型数据，内部有五个元素
+	sadd tomFri mary
+	sadd tomFri jack
+	sadd tomFri xiaoming
+	sadd tomFri wang5
+	sadd tomFri wang6
+创建linkenFri集合类型数据，内部有五个元素
+	sadd linkenFri yuehan
+	sadd linkenFri daxiong
+	sadd linkenFri luce
+	sadd linkenFri wang5
+	sadd linkenFri wang6
+对两个集合取交集并集
+	sinter tomFri linkenFri
+	sunion tomFri linkenFri
+两个集合互相取差集，结果不一样
+	sdiff tomFri linkenFri
+	sdiff linkenFri tomFri 
+smembers linkenFri
+smembers tomFri
+sismember tomFri luce
+scard tomFri	计算集合元素数目
+smove tomFri linkenFri mary	从一个集合给另一个集合移动元素
+srem tomFri xiaoming	从集合中删除指定的元素
+smembers tomFri	查看集合成员信息
+nosql

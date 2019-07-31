@@ -1,0 +1,68 @@
+大数据存储
+主流数据库
+	1.mysql
+	2.oracle
+	3.db2
+	4.nosql
+	
+					oracle
+	oracle			client			oracle
+	运行中							等待中
+	active			心跳			standby
+	oracle数据	  数据复制			oracle数据
+	
+					IBM db2
+				single database view
+		A		B		C		D
+		log		log		log		log
+		primary					secondary
+		cluster					cluster
+		caching					caching
+			shared storage access
+				database
+			
+				mysql主从
+		manager				slave		主服务器所有的增删改的操作会发给从服务器去执行
+	192.168.0.63		192.168.0.64	增删改走主服务器，查询走从服务器
+	data changes		I/O thread
+		↓				write			sqlthread
+	binary log			relay log	read reply
+		↑
+	记录服务器索引增删改的操作，便于恢复数据		
+	
+	mysql master(innodb)←写操作(insert、update、delete)apache、php
+			↓												↓
+	mysql backup(innodb)							读操作(select)
+															↓
+		同步(replication)			mysql slave(myisam)	mysql slave(myisam)	mysql slave(myisam)
+		
+mysql分库分表
+	1.垂直分表	vertical partitioning
+	2.水平分表	horizonal partitioning
+	表的增大，服务器的扩容
+mysqk分区技术
+水平分区技术将一个表拆成多个表，比较常见的方式是将表中的记录按照某种hash算法，进行拆分，简单的拆分方法如取模方式。同样，
+这种分区方法也必须对前端的应用程序中的sql进行修改方可使用。而且对于一个sql，它可能会修改两个表，那么你必须得写成2个sql
+语句从而可以完成一个逻辑的事务，使得程序的判断逻辑越来越复杂，这样也会导致程序的维护代价高，也就失去了采用数据库的优势。
+因此，分区技术可以有力地避免上述弊端，成为解决海量数据存储的有力方法。
+			mysql分区
+	database
+	database partition group 1						database partition group 2		database partition group 3
+	database partition		database partition		database partition				database partition
+																					database partition
+			mysql集群
+		A		B					C		D				E		F				A---C---E
+	mysqld	mysqld				mysqld	mysqld			mysqld		mysqld
+		cluster 1					cluster 2				cluster 3
+		
+		负载加集群
+nosql-mongodb
+	mongodb是一个基于分布式文件存储的数据库。由c++语言编写。旨在为web应用提供可扩展的高性能数据存储解决方案。
+	mongodb是一个介于关系数据库和非关系数据库之间的产品，是非关系数据库当中功能最丰富，最像关系数据库的。它支持的数据结构
+	非常松散，是类似json的bjson格式，因此可以存储比较复杂的数据类型。mongodb最大的特点是它支持的查询语言非常强大，其语法特点
+	有点类似于面向对象的查询语言，几乎可以实现类似关系数据库单标查询的绝大部分功能，而且还支持对数据建立索引。
+网站加速技术
+	1.squid代理缓存技术
+	2.界面静态化缓存
+	3.memcache
+	4.sphinx搜索加速

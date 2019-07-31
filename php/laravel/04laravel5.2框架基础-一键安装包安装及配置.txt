@@ -1,0 +1,22 @@
+laravel5.2手动下载安装及初始化配置
+安装下载laravel5.2的几种方法
+	一键安装包下载
+	github下载
+laravel初始化配置
+	1.php版本大于5.6.9
+	2.开启rewrite和vhost	httpd.conf
+		mod_rewrite.so
+		mod_vhost_alias.so
+		httpd-vhost.conf(虚拟机)
+		directory	allowoverride all	require all granted	重启apache
+		/windows/system32/drives/etc/hosts(告诉计算机域名)
+	3.开启php扩展
+		php.ini
+			extension=php_openssl.dll
+			extension=php_mbstring.dll
+			extension=php_pdo_mysql.dll
+运行laravel启动欢迎页
+	1.使用下载安装方法安装laravel5.2，需要更新生成key
+		php artisan key:generate
+	2.修改默认首页，伪静态配置文件
+		server.php
