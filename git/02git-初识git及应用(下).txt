@@ -18,5 +18,5 @@
 	git push
 	touch README.md	#myapp this is git
 	
-	cd myapp2
+	cd myapp2(下载远程仓库)
 	git clone url

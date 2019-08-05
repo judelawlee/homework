@@ -57,7 +57,7 @@ Nginx安装及错误的解决
 	配置nginx.conf
 		找到#location ~ \.php$(/php 查找，把配置好的前面的井号去掉，打开php)
 		location前加个index.php index.html index.htm
-	配置好后重启nginx，先把nginx杀掉	killallnginx
+	配置好后重启nginx，先把nginx杀掉	killall nginx
 	
 	访问发现	file not found
 	修改nginx.conf php配置的地方把 include fastcig_paras 改成 include factcig.conf

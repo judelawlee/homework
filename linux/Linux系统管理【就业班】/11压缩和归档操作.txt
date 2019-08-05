@@ -1,0 +1,112 @@
+zip压缩、gzip和bzip2压缩、tar归档及压缩
+压缩和归档操作
+	————归档备份概述
+	文件归档
+		将许多零散的文件打包，并记录好各自的位置
+			-并不压缩其存储空间
+			-主要起到整理、备案的作用
+	文件压缩
+		将单个文件按照某种算法重新编码存放
+			-只针对单个文件
+			-主要起到降低文件大小、节省磁盘空间的作用
+	归档压缩包
+		整合 归档+压缩 后的结果
+			-先归档，再压缩
+			-先压缩，再归档	很少这么做
+	归档压缩格式
+		常见压缩包格式
+			扩展名				压缩工具		归档工具
+			.zip、.rar、.7z		winrar、2345好压、z-zip	
+			.zip					zip、unzip
+			.tar.gz				gzip、gunzip	tar
+			.tar.bz2			bzip2、bunzip2	tar
+			.tar.xz				xz、unxz		tar
+	压缩和归档操作
+		————zip压缩工具
+	制作.zip压缩包
+		zip备份操作
+			-用法：zip [-r] 压缩包名 被压缩的文档... -r用于文件夹
+			ls -lh /etc > ziptest.txt
+			zip ziptest.zip ziptest.txt
+			ls -lh ziptest.*
+	zip备份应用示例
+		任务目标
+			-将目录/etc/init.d和文件install.log备份为/opt/mybak.zip
+			zip -r /opt/mybak.zip /etc/init.d/ install.log
+	释放.zip压缩包
+		unzip解压操作
+			-用法：unzip [-d 目标文件夹] .zip压缩包
+				unzip -d zdir/ ziptest.zip	释放到指定目录
+				ls zdir/
+				cd /opt
+				unzip /opt/mybak.zip	释放到当前目录
+	压缩和归档操作
+		————gzip和bzip2压缩工具		一次只操作一个文件，不用知道文件名
+	制作.gz压缩包
+		gzip压缩操作
+			-用法：gzip [-9] 文件名 ...	-9以最大的比率压缩
+			-分别压缩每个文件，原始文件不保留
+				ls -lh /etc/ > gztest.txt	建测试文件
+				gzip gztest.txt	压缩
+				ls -lh gztest.*
+				ls -lh /etc/ > gztest1.txt
+				ls -lh /etc/ > gztest2.txt
+				ls -lh /etc/ > gztest3.txt
+				ls -lh /etc/ > gztest4.txt
+				ls -ld gztest*
+				gzip gztest1.txt
+				gzip -9 gztes2.txt
+				gzip gztest3.txt gztest4.txt
+				ls -ld gztest*
+	释放.gz压缩包
+		gunzip解压操作
+			-用法1：gunzip .gz压缩包...
+			-用法2：gzip -d .gz压缩包...
+			-分别解压每个.gz包文件，原始文件不保留
+			gzip gztest.txt.gz	解压缩
+			ls -lh gztest.txt*
+			gzip -d gztest2.txt.gz
+			gunzip gztest.txt.gz gztest4.gz
+	bzip2与bunzip2
+		bzip2压缩操作：
+			-用法：bzip2 [-9] 文件名...
+			-分别压缩每个文件，原始文件不保留
+		bunzip2解压操作
+			-用法1：bunzip2 .bz2压缩包...
+			-用法2：bzip2 -d .bz2压缩包...
+			-分别解压每个.bz2包文件，原始文件不保留
+				bzip2 gztest.txt
+	压缩和归档操作
+		————tar归档工具
+	制作.tar归档包
+		tar制作备份
+			-用法：tar -cf .tar归档包名 被归档的文件...
+			-逐一复制并归档，原始文件保留
+			-选项含义：-c创建、-v细节模式、-P保留根路径、-f归档
+				tar -cf slbak.tar /etc/selinux/	新建归档
+				tar:removing leading '/' from member names
+				tar -tf slbak.tar	查看归档内容
+	释放.tar归档包	
+		tar释放备份
+			-用法：tar -xf .tar归档包 [-C目标目录]
+			-解包并逐一提取，原始文件保留
+			-选项含义：-x释放、-C存放的目标位置
+				tar -xf slbak.tar -C /opt/	释放归档到指定目录
+				ls /opt/selinux/
+	归档+压缩的整合
+		tar外连选项
+			-z：调用gzip执行压缩/解压缩
+			-j：调用bzip2执行压缩/解压缩
+		处理.tar.gz归档压缩包
+			-tar -zcf .tar.gz包名 被备份的文件...
+			-tar -zxf .tar.gz包 [-C目标目录]	
+		处理.tar.bz2归档压缩包
+			-tar -jcf .tar.bz2包名 被备份的文件...
+			-tar -jxf .tar.bz2包 [-C目标目录] 
+	归档压缩备份示例	
+		任务目标
+			-备份/etc和/srv目录，保存到/opt/目录下，采用.tar.gz格式
+			-保留原始文档的根路径(-P)、权限等属性(-p)
+				tar -zcpPf /opt/etcsrv.tar.gz /etc/ /srv/
+				ls -lh /opt/etcsrv.tar.gz
+				tar -zxpPf /opt/etcsrv.tar.gz	还原操作	.tar.gz等价于.tgz

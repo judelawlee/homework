@@ -1,0 +1,26 @@
+github是借助git管理代码的平台
+	1.git是代码管理工具
+	2.gihub是基于git实现的代码管理平台
+github的使用流程
+基础流程
+	1.在github官网创建账号
+	2.创建远程仓库(用来存储代码)
+	3.安装github客户端
+	4.登录客户端并克隆仓库
+	5.在本地仓库中存储数据
+	6.提交数据并备注信息
+	7.同步本地数据到远程仓库
+git的安装方法
+安装github
+	1.mac
+	2.windows
+https://desktop.github.com/	客户端
+创建一个特别的仓库	owner的名字是什么，仓库的名字就是什么	15077907929.github.io
+打开github客户端，登录，克隆特别仓库
+打开特别特别仓库，创建index.html(我的作品，this is 我的作品)	等价于git add .
+commit -m '备注'
+publish
+sync	同步
+查看github特别仓库是不是多了一个文件	特别仓库可以当做一个服务器地址是15077907929.github.io
+可以把自己的作品放到这里，或者分享给别人	可视化仓库的使用
+绑定域名

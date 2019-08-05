@@ -1,0 +1,58 @@
+sort set排序集合类型
+	和set一样sorted set也是string类型元素的集合，
+	不同的是每个元素都会关联一个权。 
+	通过权值可以有序的获取集合中的元素
+	
+	该sort set类型适合场合：
+		获得热门帖子(回复量)信息：select * from messages order by backnum desc limit 5;
+		(以上需求可以通过简单sql语句实现，但是sql语句比较耗费mysql数据库资源)
+	案例：利用sort set实现获取最热门的前5帖子信息
+		帖子id	回复量(万条)
+		11		102
+		12		141
+		13		159
+		14		72
+		15		203
+		16		189
+		17		191
+		18		305
+		19		184
+	排序集合中的每个元素都是值、权的组合
+	(之前的set集合元素每个元素都只是一个值) 
+	我们只做一个sort set排序集合，里边只保留5个元素信息，该5个元素是回复量最高的
+	每个帖子被回复的时候，都有机会进入该集合里边，但是只有回复量最高的前5个帖子
+	会存在于该集合，回复量低的就被删除
+	sort set排序类型
+		zadd key score member	添加元素的集合，元素在集合中存在则更新对应score
+		zrem key member	删除指定元素，1表示成功，如果元素不存在返回0
+		zincrby key incr member	安装incr幅度增加对应member的score值，返回score值
+		zrank key member	返回指定元素在集合中的排名(下标)，集合中的元素是按score从小到大排序的
+		zrevrank key member 同上，但是集合中元素是按score从大到小排序
+		zrange key start end	类似lrange操作从集合中去指定区间的元素。返回的是有序结果
+		zrevrange key start end	同上，返回结果是按score逆序的
+		zcard key	返回集合中元素个数
+		zscore key element	返回给定元素对应的score
+		zremrangebyrank key min max	删除集合中排名在给定区间的元素
+	
+	zadd hotmessage 102 11
+	zadd hotmessage 141 12
+	zadd hotmessage 159 13
+	zadd hotmessage 72 14
+	zadd hotmessage 203 15
+	
+	关于重复元素：
+	set类型：没有
+	list链表类型：有
+	sort set：没有
+	
+	创建一个sort set排序集合hotmessage的key，内部有五个元素
+	zadd hotmessage 189 16
+	zrevrange hotmessage 0 100	按照权值获得由高到低的顺序
+	zremrangebyrank hotmessage 0 0	删除排名最后的元素，集合每增加一个新元素，就把权值(回复量)最低的那个元素删除
+	zrank hotmessage 18	权由低到高获得元素排名
+	zrevrank hotmessage 18	权由高到低获得元素排名
+	zcard hotmessage	获取集合中元素个数
+	zscore hotmessage 18	根据元素值获取对应的权(回复量)
+	zincrby hotmessage 200 17	给指定的元素值增加一些权信息
+select 1
+keys *

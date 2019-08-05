@@ -1,0 +1,45 @@
+网站服务、流量监控
+	1.服务监控
+		apache web服务监控
+		mysql数据库监控
+		磁盘空间监控
+	2.流量监控
+		网站流量监控
+监控好处
+	只有监控了才知道问题，有了问题才能改进
+	cpu的漂浮度比较大，不适合做一个长期的监控点
+	磁盘监控则比较重要
+	mib管理信息库
+mrtg监控图
+cacti监控原理 
+	cacti检测系统的工作原理
+				提供web管理界面
+	管理员/用户<----------cacti<-------------其他服务器
+						|		|
+					交换机		路由器
+mysql监控图
+	rows read、rows deleted、rows updated、rows inserted	innodb
+	com select、com delete、com update、com insert	myisam
+postfix邮件报警
+	linux邮件系统
+		postfix：发邮件系统
+		sendmail：发邮件系统
+		dovecot：收邮件系统
+		电子邮件的传输过程
+		邮件传输代理MTA-----------------------邮件传输代理MTA
+			STMP			STMP				POP3
+			用户代理MUA		用户代理MUA			用户代理MUA
+			send									receive
+	
+	流量监控+邮件报警
+		mrtg+shell
+		cacti+php
+	apache压力测试-ab
+		1.apache自带的压力测试ab测试
+		2.apache benchmark，apache基准测试工具
+		3.由httpd-2.2.3-43.el5.centos软件提供
+		4.ab压力测试时，可能要创建很多测试文件并删除
+	mysql压力测试-mysqlslap
+		mysql从5.1.4版开始带有一个压力测试工具mysqlslap，通过模拟多个并发客户端访问mysql来执行测试，使用起来非常的简单
+	项目架构设置
+	linux：自由软件省资金、省资源

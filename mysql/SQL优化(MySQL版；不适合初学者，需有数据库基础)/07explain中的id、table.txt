@@ -1,0 +1,110 @@
+查询课程编号为2或教师证编号为3的老师信息	三表关联
+主干	查询老师信息
+select t.* from teacher t,course c,teacherCard tc where t.id=c.tid and t.tcid=tc.id and (c.id=2 or tc.id=3);	注意优先级
+这里不要的重点不是sql而是explain sql的执行计划
+explain select t.* from teacher t,course c,teacherCard tc where t.id=c.tid and t.tcid=tc.id and (c.id=2 or tc.id=3);
+	+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+	| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                          |
+	+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+	|  1 | SIMPLE      | t     | ALL  | NULL          | NULL | NULL    | NULL |    3 |                                |
+	|  1 | SIMPLE      | tc    | ALL  | NULL          | NULL | NULL    | NULL |    3 | Using where; Using join buffer |
+	|  1 | SIMPLE      | c     | ALL  | NULL          | NULL | NULL    | NULL |    4 | Using where; Using join buffer |
+	+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+	id值相同，从上往下，顺序执行。	t-tc-c   3-3-4
+	给teacher表增加一些数据
+		insert into teacher (4,'ta',4);
+		insert into teacher (5,'tb',5);
+		insert into teacher (6,'tc',6);	commit;
+	explain select t.* from teacher t,course c,teacherCard tc where t.id=c.tid and t.tcid=tc.id and (c.id=2 or tc.id=3);
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                          |
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		|  1 | SIMPLE      | tc    | ALL  | NULL          | NULL | NULL    | NULL |    3 |                                |
+		|  1 | SIMPLE      | c     | ALL  | NULL          | NULL | NULL    | NULL |    4 | Using where; Using join buffer |
+		|  1 | SIMPLE      | t     | ALL  | NULL          | NULL | NULL    | NULL |    6 | Using where; Using join buffer |
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+	id值相同，从上往下，顺序执行。	tc-c-t   3-4-6
+	查询表的顺序变了
+	表的执行顺序	因数据量的个数改变而改变的原因：笛卡尔积
+		对于内存来说，数据量越少越好，我们程序喜欢数据量少，数量量大，往后放。内存喜欢中国过程越简单越好。
+	
+	id值不同，id值越大越优先执行(本质：在嵌套子查询时，先查内层，在查外层)
+		查询教授sql课程的老师的描述(desc)	主干查询老师的描述
+		select tc.tcdesc from teacherCard tc,course c,teacher t where t.id=c.tid and t.tcid=tc.id and c.name='sql';
+		explain select tc.tcdesc from teacherCard tc,course c,teacher t where t.id=c.tid and t.tcid=tc.id and c.name='sql';
+		将以上多表查询转为子查询形式
+		select tc.tcdesc from teacherCard tc where tc.id=(
+			select t.tcid from teacher t where t.id=(
+				select c.tid from course c where c.name='sql'
+			)
+		);
+		+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+		| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra       |
+		+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+		|  1 | PRIMARY     | tc    | ALL  | NULL          | NULL | NULL    | NULL |    3 | Using where |
+		|  2 | SUBQUERY    
+		| t     | ALL  | NULL          | NULL | NULL    | NULL |    6 | Using where |
+		|  3 | SUBQUERY    | c     | ALL  | NULL          | NULL | NULL    | NULL |    4 | Using where |
+		+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+		c-t-tc
+	子查询+多表	sql不重要，sql执行过程重要
+		select t.name,tc.tcdesc from teacher t,teacherCard tc where t.tcid=tc.id and t.id=(
+			select c.tid from course c where c.name='sql'
+		);
+		explain select t.name,tc.tcdesc from teacher t,teacherCard tc where t.tcid=tc.id and t.id=(
+			select c.tid from course c where c.name='sql'
+		);
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                          |
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		|  1 | PRIMARY     | tc    | ALL  | NULL          | NULL | NULL    | NULL |    3 |                                |
+		|  1 | PRIMARY     | t     | ALL  | NULL          | NULL | NULL    | NULL |    6 | Using where; Using join buffer |
+		|  2 | SUBQUERY    | c     | ALL  | NULL          | NULL | NULL    | NULL |    4 | Using where                    |
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		id值有相同，又有不同：id值越大越优先，id值相同，从上往下，顺序执行
+		
+	select_type
+		primary:包含子查询sql中的主查询(最外层)
+		subquery:包含自查sql中的子查询(非最外层)
+		simple:简单查询	(不包含子查询，不包含union)
+			explain select * from teacher;
+			+----+-------------+---------+------+---------------+------+---------+------+------+-------+
+			| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows | Extra |
+			+----+-------------+---------+------+---------------+------+---------+------+------+-------+
+			|  1 | SIMPLE      | teacher | ALL  | NULL          | NULL | NULL    | NULL |    6 |       |
+			+----+-------------+---------+------+---------------+------+---------+------+------+-------+
+		derived:衍生查询(在查询的时候用到了临时表)
+			a:在from子查询中只有一张表
+				select cr.name from (
+					select * from course where tid in(1,2)
+				) cr;
+				explain select cr.name from (
+					select * from course where tid in(1,2)
+				) cr;
+				+----+-------------+------------+------+---------------+------+---------+------+------+-------------+
+				| id | select_type | table      | type | possible_keys | key  | key_len | ref  | rows | Extra       |
+				+----+-------------+------------+------+---------------+------+---------+------+------+-------------+
+				|  1 | PRIMARY     | <derived2> | ALL  | NULL          | NULL | NULL    | NULL |    3 |             |
+				|  2 | DERIVED     | course     | ALL  | NULL          | NULL | NULL    | NULL |    4 | Using where |
+				+----+-------------+------------+------+---------------+------+---------+------+------+-------------+
+				derived2:2是id
+			b:在from子查询中，如果有table1 union table2，则table1就是derived，table2就是union
+				select cr.name from (
+					select * from course where tid=1 union select * from course where tid=2)
+				) cr;
+				explain select cr.name from (
+					select * from course where tid=1 union select * from course where tid=2)
+				) cr;
+				+------+--------------+------------+------+---------------+------+---------+------+------+-------------+
+				| id   | select_type  | table      | type | possible_keys | key  | key_len | ref  | rows | Extra       |
+				+------+--------------+------------+------+---------------+------+---------+------+------+-------------+
+				|  1   | PRIMARY      | <derived2> | ALL  | NULL          | NULL | NULL    | NULL |    3 |             |
+				|  2   | DERIVED      | course     | ALL  | NULL          | NULL | NULL    | NULL |    4 | Using where |
+				|  3   | UNION        | course     | ALL  | NULL          | NULL | NULL    | NULL |    4 | Using where |
+				| NULL | UNION RESULT | <union2,3> | ALL  | NULL          | NULL | NULL    | NULL | NULL |             |
+				+------+--------------+------------+------+---------------+------+---------+------+------+-------------+
+		union:
+		union result:告知开发人员哪些表union了
+
+		
+		

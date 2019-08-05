@@ -1,0 +1,130 @@
+Laravel5.2基础路由
+一次请求的完整实现过程
+				2.router to appropriate laravel controller(routing)
+					↑		|								↓
+	1.submit user request 	|							3.interactive with data model(controller)
+			↑				↓	4.controller invokes results view	↓			↓↑
+			--------------5.render view in user's browser(view)		model <--> database
+			
+	nginx配置vhost
+		编辑nginx.conf
+			include include /usr/local/nginx/conf/conf.d/*.conf;　　　主要是加入此行，如有则忽略
+		在/usr/local/nginx/conf/conf.d/下新建blog.hd.conf文件，
+			server {
+				listen       80;
+				server_name   blog.hd;
+
+				#charset koi8-r;
+				#access_log  /var/log/nginx/host.access.log  main;
+				root   /usr/local/nginx/html/blog/public/;
+			   
+				location / {
+					try_files $uri $uri/ / /index.php?$query_string;		注意这里是为laravel配置的，否则可以用下面的
+				}
+
+				 location / {
+					index  index.php index.html index.htm;
+				}
+				#error_page  404              /404.html;
+
+				# redirect server error pages to the static page /50x.html
+				#
+				error_page   500 502 503 504  /50x.html;
+				location = /50x.html {
+					root   /usr/local/nginx/html/blog/public/;
+				}
+
+				# proxy the PHP scripts to Apache listening on 127.0.0.1:80
+				#
+				#location ~ \.php$ {
+				#    proxy_pass   http://127.0.0.1;
+				#}
+
+				# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+				#
+				location ~* \.php$ {
+					fastcgi_index   index.php;
+					fastcgi_pass    127.0.0.1:9000;
+					include           fastcgi_params;
+					fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+					fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+				}
+
+				# deny access to .htaccess files, if Apache's document root
+				# concurs with nginx's one
+				#
+				#location ~ /\.ht {
+				#    deny  all;
+				#}
+			}
+			killall nginx 重启nginx
+
+		Route::get('/hd', function () {
+			return 'get';
+		});
+		
+		Route::post('/hd', function () {
+			return 'post';
+		});
+		
+		Route::put('/hd', function () {
+			return 'put';
+		});
+
+		Route::patch('/hd', function () {
+			return 'patch';
+		});
+
+		Route::delete('/hd', function () {
+			return 'delete';
+		});
+
+		Route::options('/hd', function () {
+			return 'options';
+		});
+		
+		Route::match(['get', 'post'], '/test', function () {
+			return 'match';
+		});
+
+		Route::any('foo', function () {
+			return 'any';
+		});
+	基础路由
+		Route::get($uri, $callback);
+		Route::post($uri, $callback);
+		Route::put($uri, $callback);
+		Route::patch($uri, $callback);
+		Route::delete($uri, $callback);
+		Route::options($uri, $callback);
+
+		Route::match(['get', 'post'], '/', $callback);
+		Route::any('foo', $callback);	
+	路由参数
+		必选参数
+			一个参数和多个参数的情况
+				Route::get('user/{id}', function ($id) {
+					return 'User '.$id;
+				});
+				http://blog.hd/user/10
+				Route::get('posts/{post}/comments/{comment}', function ($postId, $commentId) {
+					return 'posts:'.$postId.'-comments:'.$commentId;
+				});
+				http://blog.hd/posts/20/comments/30
+				路由参数总是通过花括号进行包裹，这些参数在路由被执行时会被传递到路由的闭包。
+				路由参数不能包含 - 字符，需要的话可以使用 _ 替代。
+		可选参数
+			Route::get('user/{name?}', function ($name = null) {
+				return 'username:'.$name;
+			});
+			
+			Route::get('user/{name?}', function ($name = 'John') {
+				return 'username:'.$name;
+			});			
+			多个参数时，只有最后一个参数可以是可选的
+		参数约束
+			正则约束
+				Route::get('user/{id}', function ($id) {
+					return 'User '.$id;
+				})->where('id', '[0-9]+');		
+				防止攻击、sql注入

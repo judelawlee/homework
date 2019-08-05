@@ -1,0 +1,115 @@
+cat、less/more、head/tail、wc、grep
+文件内容操作
+	————阅读文本内容
+连接并显示文件
+cat——concatenate
+	-用法：cat [选项]...文件名...
+		cat /proc/cpuinfo
+cat应用示例
+	注意事项
+		结合-n选项可显示出行号，方便文本定位、了解行数
+		-当内容较多时，阅读不完整
+			cat -n /etc/passwd
+分页阅读工具
+	more命令
+		-用法：more 文件名
+		-不足：往回翻页不方便
+	基本交互操作
+		-按enter键往下翻一行、空格键下翻一屏
+		-按q或Q键退出
+		-按/键向后查找特定关键字
+			more /root/anaconda-ks.cfg
+		
+	less命令
+		-用法：less 文件名
+		-优势：支持前后翻页
+	基本交互操作
+		-按上下键头键滚动一行
+		-按pgup向前翻页、pgdn向后翻页
+		-按q或Q键退出
+		-按/键向后查找特定关键字
+			less /root/anaconda-ks.cfg
+		
+分页查看命令输出
+	管道操作
+		-用法：cmd1|cmd2
+			ls --help | less
+			cat /proc/cpuinfo | less
+			
+————提取文本的部分内容
+截取文件首/尾部
+	head、tail命令
+		-格式：head [-n数字] 文件名
+			   tail [-n数字] 文件名	[n默认为10]
+			tail /var/log/messages
+取首/尾应用示例
+	查看文件开头的2行
+		head -n 2 /etc/passwd	<=>	head -2 /etc/passwd
+	查看文件末尾的2行
+		tail -n 2 /etc/passwd	<=>	tail -2 /etc/passwd
+截中间部分示例
+	与管道操作的组合
+		-head ... | tail ...
+	cat -n /etc/passwd | head -20 | tail	取第11~20行
+	
+保存命令输出
+	重定向操作
+		用法：cmd1 > 文件路径
+			man ls > file1.txt
+			cat -n /etc/passwd | head -20 | tail > file2.txt
+
+————wc字数统计
+	文件字数统计
+	wc——word count
+		-用法：wc [选项] ... 文件名 ...
+		-统计结果依次为：行数、单词数、字节数
+			wc /etc/passwd
+			uname -a | wc
+	wc常用选项
+		-l：计算文本的总行数
+		-w：计算单词个数
+		-c：计算文件的字节数
+		-m：计算字符个数	无选项时，相当于-lwc
+	字节vs字符统计
+		注意事项
+			-英文字符占1个字节、中文字符占2~3个字节
+			-隐藏的换行符页占用1个字节
+				cat file3.txt
+				wc -c file3.txt
+				wc -m file3.txt
+	wc -l 应用示例
+		统计一共有多少用户账号
+			wc -l /etc/passwd
+		计算/etc/目录下.conf配置文件的个数
+			ls -l /etc/*.conf | wc -l
+
+————grep检索文本
+	检索文件中特定的行
+	grep工具
+		-用法：grep [选项] ... 关键词 目标文件
+	常用命令选项
+		-i：查找时忽略大小写
+		-v：反转查找，输出不符合查找条件的行
+		--color：突出显示查找字符串
+			grep '127.0.0.1' /etc/hosts
+			grep -i 'hosT4' /etc/hosts
+	关键词的特殊用法
+		基本正则表达式
+			-^...：表示以...开头
+			-...$：表示以...结尾
+			-^$：表示空行
+	过滤配置文件
+		忽略文件内的注释行、忽略空行
+			-注释行以#号开始
+				grep -v '^#' /etc/default/useradd | grep -v '^$'	去掉注释以及空行
+	统计匹配的行数
+		使用默认登录shell的用户有多少个？
+			-对应的记录以/bin/bash结尾
+			-添加选项-c将只输出相匹配的行数
+				grep -c '/bin/bash$' /etc/passwd <=> grep '/bin/bash$' /etc/passwd | wc -l
+	关键词的扩展表达
+		查找多个关键词，匹配任一个都输出
+			-用法：grep -E '关键词1|关键词2'
+			-与egrep命令等效
+				grep -v -E '^#|^$' /etc/default/useradd
+				egrep -v '^#|^$' /etc/default/useradd
