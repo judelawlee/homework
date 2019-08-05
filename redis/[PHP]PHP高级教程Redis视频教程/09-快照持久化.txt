@@ -1,0 +1,30 @@
+数据类型hash
+	hash数据类型存储的数据与mysql数据库中存储的一条记录极为相似。
+	hash类型
+	hset key field value	设置hash field为指定值，如果key不存在，则先创建
+	hget key field	获取指定的hash field
+	hmget key field1...fieldN	获取全部指定的hash field
+	hmset key field1 value1 ... fieldN valueN	同时设置hash的多个field
+	hincrby key field integer	将指定的hash field加上给定值
+	hexists key field	测试指定field是否存在
+	hdel key field	删除指定hash field
+	hlen key	返回指定hash的field数量
+	hkeys key	返回hash的所有field
+	hvals key	返回hash的所有value
+	hgetall key	返回hash的所有field和value
+持久化功能
+	redis为了内部数据的安全考虑，会把本身的数据以文件的形式保存到硬盘中一份，在服务器重启之后会自动把硬盘的数据恢复到内存(redis)
+	的里边。数据保存到硬盘的过程就称为"持久化"效果
+1.snap shotting快照持久化
+	该持久化默认开启，一次性把redis中的全部数据保存一份存储在硬盘中，如果数据非常多(10-20G)就不适合频繁使用该持久化操作。
+	快照持久化在本地硬盘的数据备份文件：/usr/local/redis/dump.rdb
+	reids备份频率
+		save 900 1	900秒内如果超过1个key被修改，则发起快照保存
+		save 300 10	300秒内如果超过10个key被修改，则发起快照保存
+		save 60  10000	60秒内如果超过10000个key被修改，则发起快照保存
+	以上三个save的意思：
+		数据修改的频率非常高，备份的频率也高
+		数据修改的频率低，备份的频率也低
+	dgfilename dump.rdb
+	系统资源、系统性能和数据安全的取舍
+	

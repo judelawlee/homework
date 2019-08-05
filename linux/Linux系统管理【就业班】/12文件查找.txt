@@ -1,0 +1,121 @@
+which、locate、find条件查找及-exec处理
+文件查找
+	————查找可执行程序文件
+命令字的检索
+	给定一个命令字，linux从哪里去找对应的指令？
+		-别名：alias可查看
+		-内部命令：help可查看
+		-程序目录：记录在环境变量PATH中
+			echo $PATH
+			sbin	一般是系统管理员才能运行的程序
+			alias
+查找外部程序
+	which工具	找到一个就不继续往下找了，命令也是这样的
+		-用法：which [-a] 命令字...
+		-从别名及程序目录中查找，但不从内部命令查找
+			which ls cd
+			which -a reboot	
+			which mkdir
+命令字的冲突处理
+	正常的调用顺序
+		别名--------------->内部命令---------------->外部程序
+		ls				    help 					/bin/ls
+													/bin/help
+	例外处理
+		-\命令字：可忽略别名
+		-程序文件路径：可忽略别名和内部命令
+			type cd;
+			alias cd='ls -l'
+			cd
+			alias cd
+			hostname 可以直接接主机名，设置主机名
+			/bin/ls
+			usalias cd
+文件查找
+	————locate模糊查找
+建立文档索引库
+	updatedb工具
+		-记录当时liunx中所有文档的路径
+		-删除/增加文档以后，需要重新updatedb，才能反映的索引库
+		-默认位置：/var/lib/mlocate/mlocate.db
+从索引库查找文档 
+	locate检索工具
+		-用法1：locate 关键词
+		-用法2：locate -b 关键词
+		-用法3：locate -b '\关键词'	严格
+locate查找示例
+	任务目标
+		-找出存放位置或名称中包含passwd关键词的所有文档
+		-选项-c可获取匹配结果数
+			locate passwd
+			locate -b '\passwd'
+			locate -c passwd
+			locate -bc '\passwd'
+			touch xuduo3.txt
+			locate xuduo3.txt
+			updatedb
+			locate xuduo3.txt
+			rm xuduo3.txt
+			locate xuduo3.txt
+			updatedb
+			locate xuduo3.txt
+文件查找
+	————find条件查找
+按条件查找文档
+	find查找工具
+		-用法：find [查找范围] [查找条件]
+		-递归式查找，未指定范围时，默认从当前目录下查找
+按类型查找
+	用法：-type 类型
+		-普通文件f、目录d、快捷方式l、块设备b、字符设备c[键盘、鼠标等]
+			find /boot -type l	查找快捷方式
+			ls -lh ...
+			find /boot -type d
+			find /dev -type b
+			find /dev -type c
+按名称查找
+	用法：-name "名称"
+		-允许*、?、[]通配符，名称以双引号括起来
+			find /etc -name "resol*.conf"
+			find /dev -type c -a -name "y[1-3]"	组合多个条件时：-a：而且为隐含关联	-o：或者
+按大小查找
+	用法：-size [+|-]大小
+		-+超过多大、-低于多大
+			find /boot -size +10M
+			ls -lh ...
+按修改时间查找
+	用法：-mtime [+|-]天数
+		-+n天之前、-n天之内
+			cp anaconda-ks.cfg anaconda-ks2.cfg
+			ls -lh anaconda-ks*.cfg
+			find ./ -name "anaconda-ks*.cfg" -mtime +30	一个月前的文件
+			ls -lh ...
+文件查找
+	————处理find找到的文档
+关于find查找结果
+	输出的信息有限
+		-仅列出文档所在的路径及名称
+		-默认情况下，不会做进一步的处理操作
+			find /boot -size +3M
+先查找，再集中处理
+	常见的措施
+		-用法1：find ... | 处理命令
+		-用法2：处理命令 $(find ...)
+			$(cmd)：命令替换操作
+				find /boot -size +3M | wc -l	需要注意管理操作能正确处理输入的数据
+				ls -lh $(find /boot -size +3M)
+找到一个，处理一个
+	避免因参数太多导致异常
+		-用法1：find ... -exec 处理命令 {} \;
+		-其中{}替代每一个查找结果，\;表示处理操作结束
+			find /boot -size +3M -exec ls -lh {} \;	注意\前有一个空格
+			find / -size +3M -exec ls -lh {} \;	注意结果是一个一个输出的
+			find . -name "anaconda-ks*cfg" -mtime -20 -exec rm -rf {} \;
+	
+	
+	
+	
+	
+	
+	
+			

@@ -1,0 +1,76 @@
+type:索引类型、类型
+	system > const > eq_ref > ref > range > index > all,要对type进行优化的前提，有索引
+	越往左边性能越高
+	system、const、eq_ref只是理想情况；可遇不可求
+	实际能达到：ref > range
+system:只有一条数据的系统表，或衍生表只有一条数据的主查询
+	create table test01(
+		id int,
+		name varchar(20)
+	);
+	insert into test01 values(1,'a');
+	commit;
+	增加索引：alter table test01 add constraint id_pk primary key(id);
+	explain select * from (select * from test01) t where t.id=1; 
+		+----+-------------+------------+--------+---------------+------+---------+------+------+-------+
+		| id | select_type | table      | type   | possible_keys | key  | key_len | ref  | rows | Extra |
+		+----+-------------+------------+--------+---------------+------+---------+------+------+-------+
+		|  1 | PRIMARY     | <derived2> | system | NULL          | NULL | NULL    | NULL |    1 |       |
+		|  2 | DERIVED     | test01     | ALL    | NULL          | NULL | NULL    | NULL |    1 |       |
+		+----+-------------+------------+--------+---------------+------+---------+------+------+-------+
+const:仅仅能查到一条数据的SQL，用于primary key或unique索引(类型与索引类型有关)
+	explain select id from test01 where id=1;
+		+----+-------------+--------+-------+---------------+---------+---------+-------+------+-------+
+		| id | select_type | table  | type  | possible_keys | key     | key_len | ref   | rows | Extra |
+		+----+-------------+--------+-------+---------------+---------+---------+-------+------+-------+
+		|  1 | SIMPLE      | test01 | const | PRIMARY       | PRIMARY | 4       | const |    1 |       |
+		+----+-------------+--------+-------+---------------+---------+---------+-------+------+-------+
+	alter table test01 drop primary key;	把主键索引删了
+	create index id_index on test01(id);	增加一个普通索引
+		+----+-------------+--------+------+---------------+----------+---------+-------+------+-------+
+		| id | select_type | table  | type | possible_keys | key      | key_len | ref   | rows | Extra |
+		+----+-------------+--------+------+---------------+----------+---------+-------+------+-------+
+		|  1 | SIMPLE      | test01 | ref  | id_index      | id_index | 4       | const |    1 |       |
+		+----+-------------+--------+------+---------------+----------+---------+-------+------+-------+
+eq_ref:唯一性索引，对于每个索引键的查询，返回匹配唯一行数据(有且只有1个，不能多，不能0)，此种情况常见于主键索引、唯一索引
+	show index from teacherCard;
+	show create table teacherCard;
+		+-------------+-------------------------------------------------------------------------------------------------------------------------------------+
+		| Table       | Create Table                                                                                                                        |
+		+-------------+-------------------------------------------------------------------------------------------------------------------------------------+
+		| teacherCard | CREATE TABLE `teacherCard` (`id` int(11) DEFAULT NULL,`tcdesc` varchar(200) DEFAULT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8 		|
+		+-------------+-------------------------------------------------------------------------------------------------------------------------------------+
+	alter table teacherCard add constraint pk_id primary key(id);	增加主键约束
+	alter table teacher add constraint uk_tcid primary key(tcid);	增加唯一键约束
+	explain select t.tcid from teacher t,teacherCard tc where t.tcid=tc.id;
+		+----+-------------+-------+--------+---------------+---------+---------+-------------+------+-------------+
+		| id | select_type | table | type   | possible_keys | key     | key_len | ref         | rows | Extra       |
+		+----+-------------+-------+--------+---------------+---------+---------+-------------+------+-------------+
+		|  1 | SIMPLE      | t     | index  | uk_tcid       | uk_tcid | 5       | NULL        |    3 | Using index |
+		|  1 | SIMPLE      | tc    | eq_ref | PRIMARY       | PRIMARY | 4       | myDB.t.tcid |    1 | Using index |
+		+----+-------------+-------+--------+---------------+---------+---------+-------------+------+-------------+
+	insert into teacher values(4,'tx',4);
+		+----+-------------+-------+-------+---------------+---------+---------+------------+------+--------------------------+
+		| id | select_type | table | type  | possible_keys | key     | key_len | ref        | rows | Extra                    |
+		+----+-------------+-------+-------+---------------+---------+---------+------------+------+--------------------------+
+		|  1 | SIMPLE      | tc    | index | PRIMARY       | PRIMARY | 4       | NULL       |    3 | Using index              |
+		|  1 | SIMPLE      | t     | ref   | uk_tcid       | uk_tcid | 5       | myDB.tc.id |    1 | Using where; Using index |
+		+----+-------------+-------+-------+---------------+---------+---------+------------+------+--------------------------+
+	以上sql，用到索引是t.tcid即teacher表中的tcid字段；如果teacher表中的数据个数和链接查询的数据个数一致，则有可能满足eq_ref级别，
+	否则无法达到
+ref:非唯一性索引，对于每个索引键的查询，返回匹配的所有行(0,多)
+	准备数据
+	insert into teacher values(5,'tx',5);
+	create index name_index on teacher(name);	增加一个普通索引
+	explain select * from teacher where name='tx';
+		+----+-------------+---------+------+---------------+------------+---------+-------+------+-------------+
+		| id | select_type | table   | type | possible_keys | key        | key_len | ref   | rows | Extra       |
+		+----+-------------+---------+------+---------------+------------+---------+-------+------+-------------+
+		|  1 | SIMPLE      | teacher | ref  | name_index    | name_index | 63      | const |    2 | Using where |
+		+----+-------------+---------+------+---------------+------------+---------+-------+------+-------------+
+
+
+
+
+
+
