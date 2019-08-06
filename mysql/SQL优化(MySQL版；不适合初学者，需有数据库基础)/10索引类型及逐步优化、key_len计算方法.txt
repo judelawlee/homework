@@ -1,0 +1,99 @@
+range:检索指定范围的行，where后面的是一个范围查询(between,in,<,>...)	in有时候会失效，从而转为无索引
+	增加索引：alter table teacher add constraint id_pk primary key(id);
+	explain select * from teacher where id>2;
+	+----+-------------+---------+-------+---------------+---------+---------+------+------+-------------+
+	| id | select_type | table   | type  | possible_keys | key     | key_len | ref  | rows | Extra       |
+	+----+-------------+---------+-------+---------------+---------+---------+------+------+-------------+
+	|  1 | SIMPLE      | teacher | range | PRIMARY       | PRIMARY | 4       | NULL |    3 | Using where |
+	+----+-------------+---------+-------+---------------+---------+---------+------+------+-------------+
+index:查询全部索引中的数据(索引列)
+	explain select id from teacher;	id是索引，只需要扫描索引，不需要扫描全部表
+	+----+-------------+---------+-------+---------------+---------+---------+------+------+-------------+
+	| id | select_type | table   | type  | possible_keys | key     | key_len | ref  | rows | Extra       |
+	+----+-------------+---------+-------+---------------+---------+---------+------+------+-------------+
+	|  1 | SIMPLE      | teacher | index | NULL          | uk_tcid | 5       | NULL |    5 | Using index |
+	+----+-------------+---------+-------+---------------+---------+---------+------+------+-------------+
+all:查询全部表中的数据(所有列)
+	explain select id from course;	id不是索引，需要全表扫描
+	+----+-------------+--------+------+---------------+------+---------+------+------+-------+
+	| id | select_type | table  | type | possible_keys | key  | key_len | ref  | rows | Extra |
+	+----+-------------+--------+------+---------------+------+---------+------+------+-------+
+	|  1 | SIMPLE      | course | ALL  | NULL          | NULL | NULL    | NULL |    4 |       |
+	+----+-------------+--------+------+---------------+------+---------+------+------+-------+
+system/const:结果只有一条数据
+eq_ref:结果多条，但是每条数据是唯一的
+ref:结果多条，但是每条数据是一条或多条
+
+(4)possible_keys:可能用到的索引，是一种预测，不准
+(5)key:实际使用的索引
+	show index from course;
+	alter table course add index name_index(name);
+	explain select t.name,tc.tcdesc from teacher t,teacherCard tc where t.tcid=tc.id and t.id=(select c.id from course c where name='sql');
+	+----+-------------+-------+-------+-----------------+------------+---------+-------+------+-------------+
+	| id | select_type | table | type  | possible_keys   | key        | key_len | ref   | rows | Extra       |
+	+----+-------------+-------+-------+-----------------+------------+---------+-------+------+-------------+
+	|  1 | PRIMARY     | t     | const | PRIMARY,uk_tcid | PRIMARY    | 4       | const |    1 |             |
+	|  1 | PRIMARY     | tc    | const | PRIMARY         | PRIMARY    | 4       | const |    1 |             |
+	|  2 | SUBQUERY    | c     | ref   | name_index      | name_index | 63      |       |    1 | Using where |
+	+----+-------------+-------+-------+-----------------+------------+---------+-------+------+-------------+
+	如果possible_keys/key是null，则说明没有使用索引
+(6)key_len:索引的长度	检查索引没有用被使用，复合索引有没有被完全使用	(a,b,c)	复合索引
+	create table test_kl(
+		name char(20) not null default ""
+	);
+	alter table test_kl add index name_index(name);
+	explain select * from test_kl where name='';
+	+----+-------------+---------+------+---------------+------------+---------+-------+------+--------------------------+
+	| id | select_type | table   | type | possible_keys | key        | key_len | ref   | rows | Extra                    |
+	+----+-------------+---------+------+---------------+------------+---------+-------+------+--------------------------+
+	|  1 | SIMPLE      | test_kl | ref  | name_index    | name_index | 60      | const |    1 | Using where; Using index |
+	+----+-------------+---------+------+---------------+------------+---------+-------+------+--------------------------+
+	在utf8中：1个字符占3个字节	key_len为60，很显然用到了索引
+	alter table test_kl add column name1 char(20);	name1可以为空
+	alter table test_kl add index name1_index(name1);
+	explain select * from test_kl where name1='';
+	+----+-------------+---------+------+---------------+-------------+---------+-------+------+-------------+
+	| id | select_type | table   | type | possible_keys | key         | key_len | ref   | rows | Extra       |
+	+----+-------------+---------+------+---------------+-------------+---------+-------+------+-------------+
+	|  1 | SIMPLE      | test_kl | ref  | name1_index   | name1_index | 61      | const |    1 | Using where |
+	+----+-------------+---------+------+---------------+-------------+---------+-------+------+-------------+
+	如果索引字段可以为null，则会使用一个字节来标识。
+	drop index name_index on table test_kl;
+	drop index name1_index on table test_kl;
+	增加一个复合索引
+	alter table test_kl add index name_name1_index (name,name1);
+	explain select * from test_kl where name1='';
+	+----+-------------+---------+-------+---------------+------------------+---------+------+------+--------------------------+
+	| id | select_type | table   | type  | possible_keys | key              | key_len | ref  | rows | Extra                    |
+	+----+-------------+---------+-------+---------------+------------------+---------+------+------+--------------------------+
+	|  1 | SIMPLE      | test_kl | index | NULL          | name_name1_index | 121     | NULL |    1 | Using where; Using index |
+	+----+-------------+---------+-------+---------------+------------------+---------+------+------+--------------------------+
+	key_len:121	20*3+20*3+1	要用name1必然要用到name
+	explain select * from test_kl where name='';
+	+----+-------------+---------+------+------------------+------------------+---------+-------+------+--------------------------+
+	| id | select_type | table   | type | possible_keys    | key              | key_len | ref   | rows | Extra                    |
+	+----+-------------+---------+------+------------------+------------------+---------+-------+------+--------------------------+
+	|  1 | SIMPLE      | test_kl | ref  | name_name1_index | name_name1_index | 60      | const |    1 | Using where; Using index |
+	+----+-------------+---------+------+------------------+------------------+---------+-------+------+--------------------------+
+	key_len:60	20*3
+	alter table test_kl add column name2 varchar(20);	name2是varchar
+	alter table test_kl add index name2__index(name2);
+	explain select * from test_kl where name2='';
+	+----+-------------+---------+------+---------------+--------------+---------+-------+------+-------------+
+	| id | select_type | table   | type | possible_keys | key          | key_len | ref   | rows | Extra       |
+	+----+-------------+---------+------+---------------+--------------+---------+-------+------+-------------+
+	|  1 | SIMPLE      | test_kl | ref  | name2__index  | name2__index | 63      | const |    1 | Using where |
+	+----+-------------+---------+------+---------------+--------------+---------+-------+------+-------------+
+	key_len:20*3+1+2=63		mysql用两个字节表示可变长度
+utf8:1个字符占3个字节
+gbk:1个字符占2个字节
+latin:1个字符占1个字节
+
+
+
+
+
+
+	
+	
+	

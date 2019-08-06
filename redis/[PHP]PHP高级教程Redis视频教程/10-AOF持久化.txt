@@ -1,0 +1,81 @@
+ls /usr/local/redis
+	dump.rdb
+	keys *
+	select 2
+	keys *
+	set addr1 beijing
+	set addr2 tianjin
+	dump.rdb 
+	vi dump.rdb
+	select 3
+	set name1 tom
+	set name2 jim
+	set name3 jack
+	dump.rdb	文件没有变化，数据没有保存
+	vi dump.rdb
+	bgsave	快照持久化
+	手动发起快照持久化
+	vi dump.rdb
+2.append only file(AOF持久化)	默认没有开启
+	本质：把用户执行的每个"写"指令(添加、修改、删除)都备份到文件中，还原数据的时候就是执行具体写指令而已。
+	开启aof持久化(会情况redis内部的数据)
+		appendonly no
+		appendonly yes
+		default appendonly.aof	可以修改备份文件的名称和dump.rdb在一起
+		重启redis
+		杀死旧的进程
+		配置文件被修改，需要删除旧进程，再跟进新的配置文件启动新进程
+		ps -A | grep redis
+		kill -9 ...(进程号)
+		./redis-server redis.conf	启动redis
+		ps -A | grep redis	查看redis进程号
+		keys * 		empty
+		set name tom
+		set age 21
+		set addr shanghai
+		ls -lh
+		vim appendonly.aof
+		set color1 yellow
+		set color2 red
+		set color3 green
+		vim appendonly.aof
+		备份的频率非常高
+		aof追加持久化的备份频率：
+		vim redis.conf
+		:set nu	显示行号
+			appendfsync always	数据最安全，系统性能不好，每次收到写指令就立即强制写入磁盘，不推荐使用
+			appendfsync everysec	每秒备份一次，数据安全中等， 性能有一定的保护	默认
+			appendfsync no	看服务器性能，服务器比较空闲就做，否则就等着，数据不安全，性能最高
+		incr num
+		incr num
+		incr num
+		incr num
+		incr num
+		incr num
+		incr num
+		incr num
+		incr num
+		incr num	备份了十份
+2.1为aof备份文件做优化处理
+	对 appendonly.aof 文件内容做优化压缩处理：
+	(例如多个incr指令变为一个set指令)
+	./redis-cli bgrewriteaof	优化压缩
+redis的持久化相关指令
+	bgsave 异步保存数据到磁盘(快照保存)
+	lastsave	返回上次成功保存到磁盘的unix时间戳
+	shutdown	同步保存到服务器并关闭redis服务器
+	bgrewriteaof	当日志文件过长时优化aof日志文件
+	./redis-cli bgrewriteaof
+	./redis-cli bgsave
+	./redis-cli -h 127.0.0.1 -p 6379 bgsave	手动发起快照
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
