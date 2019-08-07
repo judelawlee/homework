@@ -1,0 +1,70 @@
+(7)注意与type中的ref值区分
+	作用：指明当前表所参照的字段
+		select ... where a.c=b.x;	(其中b.x可以是常量，const)
+			alter table course add index id_index(id);
+			explain select * from course c,teacher t where c.id=t.id and t.name='tw';
+			+----+-------------+-------+------+--------------------+------------+---------+-----------+------+-------------+
+			| id | select_type | table | type | possible_keys      | key        | key_len | ref       | rows | Extra       |
+			+----+-------------+-------+------+--------------------+------------+---------+-----------+------+-------------+
+			|  1 | SIMPLE      | t     | ref  | PRIMARY,name_index | name_index | 63      | const     |    1 | Using where |
+			|  1 | SIMPLE      | c     | ref  | idx                | idx        | 5       | myDB.t.id |    1 | Using where |
+			+----+-------------+-------+------+--------------------+------------+---------+-----------+------+-------------+
+(8)rows:被索引优化查询的数据个数	(实际通过索引而查到的数据个数)	
+	explain select * from teacher t,course c where t.id=c.id and t.name='tz'; 
+	+----+-------------+-------+------+--------------------+------------+---------+-----------+------+-------------+
+	| id | select_type | table | type | possible_keys      | key        | key_len | ref       | rows | Extra       |
+	+----+-------------+-------+------+--------------------+------------+---------+-----------+------+-------------+
+	|  1 | SIMPLE      | t     | ref  | PRIMARY,name_index | name_index | 63      | const     |    1 | Using where |
+	|  1 | SIMPLE      | c     | ref  | idx                | idx        | 5       | myDB.t.id |    1 | Using where |
+	+----+-------------+-------+------+--------------------+------------+---------+-----------+------+-------------+
+(9)extra:
+	using filesort:性能低，性能消耗比较大，当前sql语句需要额外的一次排序(查询)
+	create table test02(
+		a1 char(3),
+		a2 char(3),
+		a3 char(3),
+		index idx_a1(a1),
+		index idx_a2(a2),
+		index idx_a3(a3),
+	);
+	explain explain select * from test02 where a1='' order by a2;
+	+----+-------------+--------+------+---------------+--------+---------+-------+------+-----------------------------+
+	| id | select_type | table  | type | possible_keys | key    | key_len | ref   | rows | Extra                       |
+	+----+-------------+--------+------+---------------+--------+---------+-------+------+-----------------------------+
+	|  1 | SIMPLE      | test02 | ref  | idx_a1        | idx_a1 | 10      | const |    1 | Using where; Using filesort |
+	+----+-------------+--------+------+---------------+--------+---------+-------+------+-----------------------------+
+	排序之前必须先查询
+	小结：对于单索引，如果排序和查找是一个字段，则不会出现using filesort，反之则会出现using filesort。
+	避免：where哪些字段就order by哪些字段
+复合索引：不能跨列(最佳左前缀)
+	drop index idx_a1 on test02;
+	drop index idx_a2 	on test02;
+	drop index idx_a3 on test02;
+	alter table test02 add index idx_a1_a2_a3(a1,a2,a3);
+	explain select * from test02 where a1='' order by a3;
+	+----+-------------+--------+------+---------------+--------------+---------+-------+------+------------------------------------------+
+	| id | select_type | table  | type | possible_keys | key          | key_len | ref   | rows | Extra                                    |
+	+----+-------------+--------+------+---------------+--------------+---------+-------+------+------------------------------------------+
+	|  1 | SIMPLE      | test02 | ref  | idx_a1_a2_a3  | idx_a1_a2_a3 | 10      | const |    1 | Using where; Using index; Using filesort |
+	+----+-------------+--------+------+---------------+--------------+---------+-------+------+------------------------------------------+
+		不能跨列
+	explain select * from test02 where a2='' order by a3;
+	+----+-------------+--------+-------+---------------+--------------+---------+------+------+------------------------------------------+
+	| id | select_type | table  | type  | possible_keys | key          | key_len | ref  | rows | Extra                                    |
+	+----+-------------+--------+-------+---------------+--------------+---------+------+------+------------------------------------------+
+	|  1 | SIMPLE      | test02 | index | NULL          | idx_a1_a2_a3 | 30      | NULL |    1 | Using where; Using index; Using filesort |
+	+----+-------------+--------+-------+---------------+--------------+---------+------+------+------------------------------------------+
+	explain select * from test02 where a1='' order by a2;
+	+----+-------------+--------+------+---------------+--------------+---------+-------+------+--------------------------+
+	| id | select_type | table  | type | possible_keys | key          | key_len | ref   | rows | Extra                    |
+	+----+-------------+--------+------+---------------+--------------+---------+-------+------+--------------------------+
+	|  1 | SIMPLE      | test02 | ref  | idx_a1_a2_a3  | idx_a1_a2_a3 | 10      | const |    1 | Using where; Using index |
+	+----+-------------+--------+------+---------------+--------------+---------+-------+------+--------------------------+
+	小结：避免：where和order by按照复合索引的顺序使用，不要跨列或无序使用。
+	
+	
+	
+	
+	
+	
+	

@@ -1,0 +1,142 @@
+rpm机制概述、光盘访问、rpm查询/安装/卸载
+rpm软件包管理
+	————rpm机制概述
+常见的软件封包类型
+	封包类型			说明
+	rpm软件包 			扩展名为.rpm，适用于redhat系列
+	deb软件包			扩展名为.deb，适用于的debian系列
+	源代码软件包		通常以.tar.tz、.tar.bz2格式的压缩包(tarball)提供包含程序的原始代码文件
+	其他				提供install.sh、setup、*.bin、*.pl等安装文件
+						绿色免安装、提供以编译好的程序及相关文件
+rpm工作机制
+	rpm package manager
+		-由红帽公司提出，redhat、suse等系列采用
+		-建立集中的数据档案，记录软件包安装/卸载等变化信息
+		-根据档案分析软件之间的依赖关系
+	rpm软件资源站点
+		-rpmfind.net
+		-centos.org
+rpm数据档案库
+	rpm档案文件
+		ls /var/lib/rpm/
+rpm安装文件的特质
+	文件名的一般组成
+		-软件名-版本信息.操作系统.硬件架构.rpm
+			bash-4.1.2-15.el6_4.x86_64.rpm
+			firefox-17.0.10-1.el6_4.i686.rpm
+rpm软件不支持自定义安装目录，安装目录在封包时就固定好的。
+常见安装位置
+	rpm一般不支持自定义安装目录
+		文件类别				默认安装位置
+		普通执行程序			/usr/bin/、/bin/
+		服务器程序、管理工具	/usr/sbin/、/sbin/
+		配置文件				/etc/、/etc/软件名/
+		日志文件				/var/log/、/var/log/软件名/
+		程序文档、man手册页		/usr/share/doc/、/usr/share/man/
+			rpm -ql bash | less	安装清单
+rpm软件包管理
+	————访问rhel6系统安装盘
+rhel6光盘目录结构
+	rhel6(x86_64)光盘结构
+		-highavailability	高可用相关软件包
+		-loadbalance	负载均衡相关软件包
+		-packages	所有软件包的时机存放位置
+		-server	常用软件包
+linux下的光盘设备
+	通用的快捷方式
+		-/dev/cdrom
+	时机的设备文件
+		-/dev/sr0，对应scsi接口的光驱
+		-/dev/hdc，对应ide接口的光驱
+			ls -l /dev/cdrom
+			ls -l /dev/sr0
+挂载/卸载的概念
+	挂载、卸载操作
+		-挂载：mount 设备名 挂载点
+		-卸载：unmount 设备名(或挂载点)
+访问rhel6光盘
+	通过触发挂载点 /misc/cd/ 去访问
+		-当访问 /misc/cd/ 时，系统会自动把光盘给挂上
+			ls /misc/
+			ls /misc/cd/
+手动挂载rhel6光盘
+	将光盘/dev/cdrom挂载到指定的位置
+		-文件系统类型为iso9660
+			mount /dev/cdrom /mnt/
+			mount | tail -n 1
+rpm软件包管理
+	————查询软件信息
+了解已安装软件的信息
+	查询通过rpm方式安装的软件包信息
+		-用法：rpm -q[子选项] [软件名称]
+	常用的子选项
+		-a：列出已安装的所有软件包
+		-i：查询指定软件的详细信息	information
+		-l：查看指定软件的文件安装清单
+		-c、-d：仅列出安装清单中的配置/文档文件
+			rpm -q bash
+			rpm -q bashx
+			rpm -qa
+			rpm -qa vim*
+			rpm -qi bash
+			rpm -ql bash
+			rpm -ql bash | grep bin
+			rpm -qd bash
+了解文档所属的软件
+	查询某个目录/文件是由哪个rpm包带来的
+		-用法：rpm -qf [文件路径] ...
+		-即使目标文件被删除，也可以查询
+			which vim
+			rpm -qf /usr/bin/vim
+			rpm -qi vim-enhanced
+了解.rpm安装文件的信息
+	执行安装前检查
+		-用法：rpm -q[子选项] [rpm包文件]
+		-常用的子选项
+			-pi：查看指定软件包的信息信息
+			-pl：查看指定软件的文件安装清单
+				rpm -qpi ...
+				rpm -qpl ... | grep bin
+rpm软件包管理
+	————安装/卸载软件包
+正常安装及升级
+	rpm安装/升级操作
+		-用法：rpm -i rpm包文件			install
+			   rpm -U rpm包文件			update
+			   rpm -F rpm包文件			fresh
+	辅助选项
+		-v：显示细节信息
+		-h：以#号显示安装进度
+			rpm -q lynx... iptraf...	查询指定rpm包有没有安装
+			rpm -i lynx ...
+			rpm -q lynx
+			rpm -ivh iptraf...
+强制/覆盖安装
+	删除vim程序后，rpm重装进行恢复
+		-若未卸载所属软件，直接重装会被阻止
+		-可结合--force选项强制执行
+			rm -rf /usr/bin/vim
+			vim test.txt
+			rpm -ivh --force vim-enhanced*.rpm
+卸载rpm软件
+	基本操作
+		-用法：rpm -e 软件名
+			rpm -e iptraf
+			rpm -q lynx iptraf
+软件依赖关系
+	解决依赖关系
+		-先安装/卸载要求的包
+		-如果rpm包齐全但比较多，可以用通配符
+	忽略依赖关系(不推荐)
+		-可能会导致软件运行异常
+		-辅助选项--nodeps
+			rpm -qa "vim*"
+			rpm -e vim-common	报依赖错误
+			rpm -e vim-common vim-enhanced
+			rpm -ivh vim-enhanced*.rpm	报依赖错误
+			rpm -ivh vim-common*.rpm vim-enhanced*.rpm
+
+			
+			
+	
+	

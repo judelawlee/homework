@@ -1,0 +1,85 @@
+lvs dr模式
+3)virtual server via direct routing(vs/dr)
+	vs/dr通过改写请求报文的mac地址，将请求发送到真实服务器，而真实服务器将响应直接返回给客户。同vs/tun技术一样，
+	vs/dr技术可极大地提高集群系统的伸缩性。这种方法没有ip隧道的开销，对集群中的真实服务器也没有必须支持ip隧道协议
+	的要求，但是要求调度器与真实服务器都有一块网卡连在同一物理网段上。
+		lvs dr规划拓扑
+	vs/dr，直接路由模式
+									vip:200.168.10.10											|------web server 200.168.10.2
+		internet-------------------------lvs---------------------------------交换机--------------
+					(1)向vip发出请求	eth0 200.168.10.1	(2)mac地址转换						|------web server 200.168.10.3
+																										(3)请求返回给客户
+	缺点:所有ip都要用公网ip
+	优点：lvs不会成为瓶颈
+四种常用的轮叫算法
+	四种常用的轮叫负载算法
+	1.轮叫(round robin)
+		调度器通过"轮叫"调度算法将外部请求按顺序轮流分配到集群中的真是服务器上，它均等地对待每一台服务器，而不管服务器上
+		真实的连接和系统负载。
+	2.加权轮叫(weighted round robin)
+		调度器通过"加权轮叫"调度算法根据真是服务器的不同处理能力来调度访问请求。这样可以保证处理能力强的服务器处理更多的
+		访问流量。调度器可以自动问询真实服务器的负载情况，并动态的挑战其权值。
+	3.最少链接(least connections)
+		调度器通过"最少连接"调度算法动态地将网路请求调度到已建立的连接数最少的服务器上。如果集群中的真实服务器具有相近的系统
+		性能，采用"最少连接"调度算法可以较好地均衡负载
+	4.加权最少链接(weighted least connections)
+		在集群系统中的服务器性能差异较大的情况下，调度器采用"加权最少链接"调度算法优化负载均衡性能，具有较高权值的服务器
+		将承受较大比例的活动连接负载。调度器可以自动问询真是服务器的负载情况，并动态的挑战其权值。
+		
+lvs nat模式拓扑
+	这里做的实验采用基于vs/nat，轮叫机制
+						  eth0:8.8.8.8									|--------web server:192.168.10.2
+			internet------------------lvs----------------------交换机----	
+										 eth1:192.168.10.1				|--------web server:192.168.10.3		
+	创建三个虚拟机 lvs server(两块网卡)、web server1、web server2(200M)	
+	用真实win7模拟外部用户请求eth0的网卡，配置win7的ip(vm1) 8.8.8.1 255.255.255.0	
+	一个计算机可以有多个网卡、一个网卡对应一个ip(不同网段的)、不可以将同一网段的ip配置在计算机的网卡上，计算机可以看作是路由器
+	可以互联不同网段。vm1可以连接虚拟机上的vm1(ip不同、网段相同)
+	lvs的网卡：左侧网卡调至成vm1(custom)host only(仅主机模式)，第二块网卡用wm2(custom)host only(仅主机模式)
+	web server1:网卡用wm2(custom)host only(仅主机模式)
+	web server2:网卡用wm2(custom)host only(仅主机模式)	使用wm2则它们三个处于同一个网段(连了同一个交换机)
+	把其他其他网卡禁掉，以防对实验造成干扰
+	首先配置ip	192.168.*.*网段是私有ip
+	关闭防火墙、seliunx
+lvs nat实验规划
+	设置vip脚本
+		directorserver:8.8.8.8 192.168.10.1
+			ifconfig eth0 8.8.8.8 netmask 255.255.255.0
+			ifconfig eth1 192.168.10.1 netmask 255.255.255.0	回环接口没有mac地址
+			route add default gw 192.168.10.1	添加网关
+			route -n
+		realserver:192.168.10.2
+			ifconfig eth1 192.168.10.2 netmask 255.255.255.0
+			route add default gw 192.168.10.1
+			route -n
+		realserver:192.168.10.3
+			ifconfig eth1 192.168.10.3 netmask 255.255.255.0
+			route add default gw 192.168.10.1
+			route -n
+			iptables -L
+			/etc/init.d/iptables stop
+			sestatus
+		lvs server:
+		echo 1 > /proc/sys/net/ipv4/ip_forward	开启路由功能，使服务器的两块网卡可以通信
+		ipvsadm -C	清空
+		ipvsadm -At 8.8.8.8:80 -s rr	-A增加一个带有调度算法的转换表	-t:tcp通信
+		ipvsadm -at 8.8.8.8:80 -r 192.168.10.2:80 -m	-m:nat模式
+		ipvsadm -at 8.8.8.8:80 -r 192.168.10.3:80 -m
+		
+		ping 8.8.8.8
+		ping 192.168.10.2
+		ping 192.168.10.3	私有ip在公网无法穿行
+		
+		安装 ipvsadm
+			yum -y install ipvsadm*
+			编写 lvs-server脚本	vim ipvs.sh(shell脚本)
+				#!/bin/bash
+				#lvs.sh
+				ipvsadm -C
+				ipvsadm -At 8.8.8.8:80 -s rr	
+				ipvsadm -at 8.8.8.8:80 -r 192.168.10.2:80 -m	
+				ipvsadm -at 8.8.8.8:80 -r 192.168.10.3:80 -m
+				ipvsadm -L -n
+				脚本执行加权限	chmod a+x ipvs.sh
+			./ipvs.sh	执行脚本
+			注意用ie浏览器，火狐有缓存，没有变

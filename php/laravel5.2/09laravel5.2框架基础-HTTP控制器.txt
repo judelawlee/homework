@@ -1,0 +1,22 @@
+控制器：数据和视图之间的桥梁
+控制器创建方法
+1.手动创建
+	<?php
+	namespace App\Http\Controllers;
+	class IndexController extends Controller{
+		public function index(){
+			echo 'index';
+		}
+	}
+	?>
+2.artisan方法创建
+	php artisan make:controller HomeController
+	
+	Route::get('/test', 'IndexController@index');
+扩展
+	路由访问控制器
+	控制器分文件夹
+		Route::get('/test', 'Admin\IndexController@index');
+		namespace App\Http\Controllers\Admin;
+		use App\Http\Controllers\Controller;
+
