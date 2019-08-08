@@ -82,4 +82,154 @@ lvs nat实验规划
 				ipvsadm -L -n
 				脚本执行加权限	chmod a+x ipvs.sh
 			./ipvs.sh	执行脚本
-			注意用ie浏览器，火狐有缓存，没有变
+			注意用ie浏览器，火狐有缓存，没有变，f5按着不动就可以了，会变
+			
+lvs ip-tun技术网络拓扑
+	vi/ip-tun，ip隧道模式
+					vip eth1:200.168.10.10								|--------web server:200.168.10.2
+			internet------------------lvs----------------------交换机----	
+				(1)向vip发出请求		 eth0:200.168.10.1	(2)隧道封装	|--------web server:200.168.10.3				
+											(3)请求返回给客户
+lvs ip-tun实验规划
+	创建三个虚拟机 lvs server(一块网卡)、web server1、web server2(100M)	
+		用真实win7模拟外部用户请求eth0的网卡，配置win7的ip(vm1) 200.168.10.4 255.255.255.0	
+		lvs的网卡：左侧网卡调至成vm1(custom)host only(仅主机模式)
+		web server1:网卡用wm1(custom)host only(仅主机模式)
+		web server2:网卡用wm1(custom)host only(仅主机模式)	使用wm1则它们三个处于同一个网段(连了同一个交换机)
+	lvs脚本
+		directorserver:200.168.10.1
+			ifconfig eth0 200.168.10.1 netmask 255.255.255.0
+			ifconfig eht1 down
+			route -n
+			route del default	删除网关	这里在一个网络里面，不需要网关
+		realserver:200.168.10.2
+			ifconfig eth0 200.168.10.2 netmask 255.255.255.0
+			route del default
+		realserver:200.168.10.3
+			ifconfig eth0 200.168.10.3 netmask 255.255.255.0
+			route del default
+		vip=200.168.10.10
+lvs ip-tun服务器脚本
+	ifconfig tunl0 200.168.10.10 netmask 255.255.255.255 up
+	route add -host 200.168.10.10 dev tunl0
+	ipvsadm -C
+	ipvsadm -At 200.168.10.10:80 -s rr	
+	ipvsadm -at 200.168.10.10:80 -r 200.168.10.2:80 -i	
+	ipvsadm -at 200.168.10.10:80 -r 200.168.10.3:80 -i
+	ipvsadm -L -n	
+			编写 lvs-server脚本	vim ipvs.sh(shell脚本)
+				#!/bin/bash
+				#lvs.sh
+				ipvsadm -C
+				ipvsadm -At 200.168.10.10:80 -s rr	
+				ipvsadm -at 200.168.10.10:80 -r 200.168.10.2:80 -i	
+				ipvsadm -at 200.168.10.10:80 -r 200.168.10.3:80 -i
+				ipvsadm -L -n	
+				脚本执行加权限	chmod a+x ipvs.sh
+			./ipvs.sh	执行脚本
+lvs ip-tun真实客户端脚本
+	ifconfig tunl0 200.168.10.10 netmask 255.255.255.255 up
+	route add -host 200.168.10.10 dev tunl0
+	echo "1" > /proc/sys/net/ipv4/conf/tunl0/arp_ignore
+	echo "2" > /proc/sys/net/ipv4/conf/tunl0/arp_announce
+	echo "1" > /proc/sys/net/ipv4/conf/all/arp_ignore
+	echo "2" > /proc/sys/net/ipv4/conf/all/arp_announce	
+	vim arp.sh	shell脚本
+		#!/bin/bash
+		#arp.sh
+			echo "1" > /proc/sys/net/ipv4/conf/tunl0/arp_ignore
+			echo "2" > /proc/sys/net/ipv4/conf/tunl0/arp_announce
+			echo "1" > /proc/sys/net/ipv4/conf/all/arp_ignore
+			echo "2" > /proc/sys/net/ipv4/conf/all/arp_announce		
+			echo "0" > /proc/sys/net/ipv4/conf/tunl0/rp_filter
+			echo "0" > /proc/sys/net/ipv4/conf/all/rp_filter	注意	这个 rp_filter
+		脚本执行加权限	chmod a+x arp.sh
+		./arp.sh	执行脚本
+		scp arp.sh 200.168.10.3:/root/	传递文件
+		三次握手和tcp的四次完全断开
+		service network restart
+		安装 ipvsadm
+			yum -y install ipvsadm*	
+			ping 200.168.10.1
+			ping 200.168.10.2
+			ping 200.168.10.3
+			ping 200.168.10.4	保证四台机器可以互相ping通
+
+lvs dr技术网络拓扑			
+	vs/dr，直接路由模式
+									vip:200.168.10.10											|------web server 200.168.10.2
+		internet-------------------------lvs---------------------------------交换机--------------
+					(1)向vip发出请求	eth0 200.168.10.1	(2)mac地址转换						|------web server 200.168.10.3
+																										(3)请求返回给客户			
+	创建三个虚拟机 lvs server(一块网卡)、web server1、web server2(100M)	
+		用真实win7模拟外部用户请求eth0的网卡，配置win7的ip(vm1) 200.168.10.4 255.255.255.0	
+		lvs的网卡：左侧网卡调至成vm1(custom)host only(仅主机模式)
+		web server1:网卡用wm1(custom)host only(仅主机模式)
+		web server2:网卡用wm1(custom)host only(仅主机模式)	使用wm1则它们三个处于同一个网段(连了同一个交换机)
+	lvs脚本
+		directorserver:200.168.10.1
+			ifconfig eth0 200.168.10.1 netmask 255.255.255.0
+			ifconfig eht1 down
+			route -n
+			route del default	删除网关	这里在一个网络里面，不需要网关
+		realserver:200.168.10.2
+			ifconfig eth0 200.168.10.2 netmask 255.255.255.0
+			route del default
+		realserver:200.168.10.3
+			ifconfig eth0 200.168.10.3 netmask 255.255.255.0
+			route del default
+		vip=200.168.10.10		
+lvs dr服务器脚本
+	ifconfig eth0:0 200.168.10.10 netmask 255.255.255.255 up
+	ifconfig tunl0 down
+	route add -host 200.168.10.10 dev eth0:0	一个网卡可以配置多个ip
+	ipvsadm -C
+	ipvsadm -At 200.168.10.10:80 -s rr	
+	ipvsadm -at 200.168.10.10:80 -r 200.168.10.2:80 -g	
+	ipvsadm -at 200.168.10.10:80 -r 200.168.10.3:80 -g
+	ipvsadm -L -n	
+			编写 lvs-server脚本	vim ipvs.sh(shell脚本)
+				#!/bin/bash
+				#lvs.sh
+				ipvsadm -C
+				ipvsadm -At 200.168.10.10:80 -s rr	
+				ipvsadm -at 200.168.10.10:80 -r 200.168.10.2:80 -g
+				ipvsadm -at 200.168.10.10:80 -r 200.168.10.3:80 -g
+				ipvsadm -L -n	
+				脚本执行加权限	chmod a+x ipvs.sh
+			./ipvs.sh	执行脚本		
+lvs dr真实客户端脚本
+	ifconfig lo:0 200.168.10.10 netmask 255.255.255.255 up
+	ifconfig tunl0 down
+	route add -host 200.168.10.10 dev lo:0
+	echo "1" > /proc/sys/net/ipv4/conf/lo/arp_ignore
+	echo "2" > /proc/sys/net/ipv4/conf/lo/arp_announce
+	echo "1" > /proc/sys/net/ipv4/conf/all/arp_ignore
+	echo "2" > /proc/sys/net/ipv4/conf/all/arp_announce	
+	vim arp.sh	shell脚本
+		#!/bin/bash
+		#arp.sh
+			echo "1" > /proc/sys/net/ipv4/conf/lo/arp_ignore
+			echo "2" > /proc/sys/net/ipv4/conf/lo/arp_announce
+			echo "1" > /proc/sys/net/ipv4/conf/all/arp_ignore
+			echo "2" > /proc/sys/net/ipv4/conf/all/arp_announce		
+			echo "0" > /proc/sys/net/ipv4/conf/lo/rp_filter
+			echo "0" > /proc/sys/net/ipv4/conf/all/rp_filter	注意	这个 rp_filter
+		脚本执行加权限	chmod a+x arp.sh
+		./arp.sh	执行脚本
+		scp arp.sh 200.168.10.3:/root/	传递文件
+		三次握手和tcp的四次完全断开
+		service network restart
+		安装 ipvsadm
+			yum -y install ipvsadm*	
+			ping 200.168.10.1
+			ping 200.168.10.2
+			ping 200.168.10.3
+			ping 200.168.10.4	保证四台机器可以互相ping通			
+		ifconfig tunl0 down
+	抓包	tcpdump -i eth1 -nn		f标记代表结束	三次握手和tcp的四次完全断开
+本章总结
+	1.lvs的三种负载均衡模式
+	2.lvs的nat技术的实现
+	3.lvs的ip-tun技术的实现
+	4.lvs的dr技术的实现

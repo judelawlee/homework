@@ -1,0 +1,24 @@
+通过php操作redis
+	在php里边，redis就是一个功能类Redis，该类里边有许多成员方法(名字基本与redis指令的名字一直，参数也一致)
+	//创建对象
+		$redis=new \Redis();
+		//链接redis服务器
+		$redis->connect('192.168.1.121',6379);
+		//选择数据库
+		$redis->select(5);
+		//设置key
+		$redis->set('weather','sun');
+		var_dump($redis->get('weather'));
+		$redis->mset(['height1'=>170,'height2'=>171,'height3'=>172]);
+		var_dump($redis->mget(['height1','height2','height3']));
+		echo 'redis is ok';
+		
+通过反射感知redis类里面的全部操作方法
+		$me=new \ReflectionClass('Redis');
+		var_dump($me->getMethods());
+
+
+
+
+
+

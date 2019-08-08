@@ -1,0 +1,53 @@
+phpstorm file-setting-edit-文件编码	utf-8
+命名路由
+	Route::get('user/profile', function () {
+		echo '命名路由';
+		echo route('profile');
+	})->name('profile');
+	Route::get('user/profile', 'UserController@showProfile')->name('profile');
+路由分组
+	Route::get('/admin/login', 'Admin\LoginController@login');
+	Route::get('/admin/index', 'Admin\IndexController@index');
+	Route::group(['prefix' => 'admin','namespace' => 'Admin'], function(){
+		Route::get('login', 'LoginController@login');
+		Route::get('index', 'IndexController@index');
+	});
+RESTful资源控制器
+	1.资源路由设置
+		php artisan make:controller PhotoController --resource
+		Route::resource('photos', 'PhotoController');
+	2.artisan命令查看资源路由
+		php artisan route:list	查看路由
+		+--------+----------------------------------------+---------------------------------+----------------+--------------------------------------------------+--------------+
+		| Domain | Method                                 | URI                             | Name           | Action                                           | Middleware   |
+		+--------+----------------------------------------+---------------------------------+----------------+--------------------------------------------------+--------------+
+		|        | GET|HEAD                               | /                               |                | Closure                                          | web          |
+		|        | GET|HEAD                               | admin/index                     |                | App\Http\Controllers\Admin\IndexController@index | web          |
+		|        | GET|HEAD                               | api/user                        |                | Closure                                          | api,auth:api |
+		|        | GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS | foo                             |                | Closure                                          | web          |
+		|        | OPTIONS                                | hd                              |                | Closure                                          | web          |
+		|        | DELETE                                 | hd                              |                | Closure                                          | web          |
+		|        | GET|HEAD                               | hd                              |                | Closure                                          | web          |
+		|        | PATCH                                  | hd                              |                | Closure                                          | web          |
+		|        | POST                                   | hd                              |                | Closure                                          | web          |
+		|        | PUT                                    | hd                              |                | Closure                                          | web          |
+		|        | POST                                   | photos                          | photos.store   | App\Http\Controllers\PhotoController@store       | web          |
+		|        | GET|HEAD                               | photos                          | photos.index   | App\Http\Controllers\PhotoController@index       | web          |
+		|        | GET|HEAD                               | photos/create                   | photos.create  | App\Http\Controllers\PhotoController@create      | web          |
+		|        | DELETE                                 | photos/{photo}                  | photos.destroy | App\Http\Controllers\PhotoController@destroy     | web          |
+		|        | GET|HEAD                               | photos/{photo}                  | photos.show    | App\Http\Controllers\PhotoController@show        | web          |
+		|        | PUT|PATCH                              | photos/{photo}                  | photos.update  | App\Http\Controllers\PhotoController@update      | web          |
+		|        | GET|HEAD                               | photos/{photo}/edit             | photos.edit    | App\Http\Controllers\PhotoController@edit        | web          |
+		|        | GET|HEAD                               | posts/{post}/comments/{comment} |                | Closure                                          | web          |
+		|        | GET|HEAD                               | test                            |                | App\Http\Controllers\Admin\IndexController@index | web          |
+		|        | GET|HEAD                               | user/profile                    | profile        | Closure                                          | web          |
+		|        | GET|HEAD                               | user/{id}                       |                | Closure                                          | web          |
+		+--------+----------------------------------------+---------------------------------+----------------+--------------------------------------------------+--------------+
+
+
+
+
+
+
+
+

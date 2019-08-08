@@ -1,0 +1,16 @@
+composer create-project --prefer-dist yiisoft/yii2-app-basic yii	下载yii2框架，名称叫yii
+安装过程中错误处理
+	invalid parameter -yii/base/invalidparaexception
+	the file or directory to be published does not exist；
+	/vender/bower/dist
+composer self-update1.0.0-alpha11
+composer clear-cache
+
+composer安装yii2.0框架
+	composer install	(没有vendor文件夹时执行)
+
+
+
+
+
+

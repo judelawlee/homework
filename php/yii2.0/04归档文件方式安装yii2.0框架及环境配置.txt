@@ -1,0 +1,35 @@
+归档文件安装
+	下载地址：yiiframework.com/download
+	修改config/web.php文件，给cookievalidationkey配置项添加一个秘钥
+	(若你通过composer安装，则此步骤会自动完成)
+	
+	在下面插入一段秘钥(若为空)-以供cookie validation的需要
+	'cookievalidationkey'=>'在此处输入你的秘钥'
+yii2.0参考文档
+	中文文档
+	英文文档
+	
+	php>5.4
+	httpd.conf开启vhost组件
+	httpd-vhosts.conf配置域名
+	修改hosts
+	重启http服务器	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

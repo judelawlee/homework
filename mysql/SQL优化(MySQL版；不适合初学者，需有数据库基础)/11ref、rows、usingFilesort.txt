@@ -18,7 +18,7 @@
 	|  1 | SIMPLE      | c     | ref  | idx                | idx        | 5       | myDB.t.id |    1 | Using where |
 	+----+-------------+-------+------+--------------------+------------+---------+-----------+------+-------------+
 (9)extra:
-	using filesort:性能低，性能消耗比较大，当前sql语句需要额外的一次排序(查询)
+	using filesort:性能低，性能消耗比较大，当前sql语句需要额外的一次排序(查询)，常见于order by语句中
 	create table test02(
 		a1 char(3),
 		a2 char(3),

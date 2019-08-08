@@ -1,0 +1,14 @@
+composer安装yii2.0框架
+	composer下载
+	packagist仓库:packagist.org		composer的仓库
+	
+	composer global require "fxp/composer-asset-plugin:~1.0.0"			yii2依赖了一些静态文件，所以需要
+	composer global require fxp/composer-asset-plugin --no-plugins
+	composer create-project --prefer-dist yiisoft/yii2-app-basic basic		
+	composer install
+	
+	github token获取	github.com/settings/tokens
+	
+	composer--------------->packagist
+		↑						↓
+		--------------------github

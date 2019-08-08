@@ -1,0 +1,55 @@
+检查rpm软件\rpm包文件完整性、rpm秘钥...
+rpm软件验证
+	————检查完整性及签名
+验证已安装的软件
+	检查哪些文件被改动、做了哪些改动
+		-只针对在制作rpm包时指定的文件
+		-用法：rpm -V 软件名
+			   rpm -Vf 文件路径
+			   rpm -Va 
+			rpm -V bash	无输出表示正常
+			rpm -V iniscripts
+			rpm -Vf /etc/passwd
+				S:文件大小变化
+				M:权限或类型变化
+				5:md5校验和变化
+				D:设备编号不一致
+				L:链接数不一致
+				U:所属用户变化
+				G:所属组变化
+				T:修改时间变化
+验证待安装的rpm包
+	检查.rpm包文件完整性、是否被破坏
+		-用法：rpm -K --nosignature rpm包文件...
+			cd /misc/cd/packages/
+			rpm -K --nosignature lynx*.rpm
+				la > foo.rpm
+				rpm -K --nosignature foo.rpm
+				rpm -K --nosignature iptraf*.rpm
+验证待安装的rpm包
+	检查.rpm包文件是否为官方版本
+		-用法：rpm --import 软件官方公钥
+			rpm -K rpm包文件...
+				rpm --import /misc/cd/packages/rpm-gpg-key*
+				rpm -K lynx*.rpm
+				rpm -K ntfs*.rpm
+管理rpm验证公钥
+	查看已安装的公钥
+		-rpm -qa gpg-pubkey*
+		-rpm -qi gpg-pubkey-秘钥指纹
+	卸载指定的公钥
+		-rpm -e gpg-pubkey-秘钥指纹
+			rpm -qa gpg-pubkey*
+			rpm -qi gpg-pubkey-...
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				

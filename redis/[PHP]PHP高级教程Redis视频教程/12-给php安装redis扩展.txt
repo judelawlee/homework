@@ -1,0 +1,30 @@
+php与redis结合
+安装php的redis扩展
+	phpredis.tar.gz
+	autoconf-2.62.tar.gz
+	把phpredis扩展和其依赖软件上传到linux系统里边
+	tar xvf phpredis.tar.gz
+	cd phpredis
+	/usr/local/php/bin/phpize	重新配置php	在phpredis目录里面执行	提示有autoconf依赖问题
+	提示有 autoconf 软件依赖问
+	在redis扩展解压目录执行指令/usr/local/php/bin/phpize
+	作用：可以把redis扩展反过来安装进php里边。可以给redis扩展做一些php相关的配置。
+	
+	tar xvf autoconf-2.62.tar.gz
+	cd autoconf
+	./configure && make && make install		不需要任何参数配置，直接安装就可以了
+	cd phpredis	把刚才的指令重新执行一下 phpize
+	phpiz 指令执行成功
+	为phpreids扩展做config配置
+	./configure --help
+	./configure --with-php-config=/usr/local/php/bin/php-config
+	make && make install
+	installing shared extensions:出现一个redis.so扩展文件(包含目录)
+	在php.ini文件里面引入redis.so
+	vim php.ini \extension
+		extension=redis.so
+	给php.ini文件增加redis的一个扩展
+	重启nginx
+	killall nginx
+	/usr/local/nginx/sbin/nginx
+	注意php版本和redis版本，之后要重启nginx和php
