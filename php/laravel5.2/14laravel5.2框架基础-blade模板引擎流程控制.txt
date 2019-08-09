@@ -1,0 +1,32 @@
+blade模板引擎流程控制
+	@if
+		@if($data['score']<60)
+			不及格
+		@else 
+			及格
+		@endif
+	@unless
+		@unless($data['score']>60)
+			不及格
+		@endunless
+	@for
+		@for($i=0;i<=$data['num'];$i++)
+			{{$i}}<br/>
+		@endfor
+	@foreach
+		@foreach($data['article'] as $val)
+			{{$val}}<br/>	news1、news2、news3、news4、news5
+		@endforeach
+	@forelse
+		@forelse($data['news'] as $val)
+			{{$val}}<br/>	news1、news2、news3、news4、news5
+			@empty
+				没有数据
+		@endforelse	
+	@while
+以上基本控制流程可以嵌套
+	@foreach($data['article'] as $key=>$val)
+		@if($key>3)
+			{{$key}}=>{{$val}}<br/>	
+		@endif
+	@endforeach

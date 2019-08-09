@@ -1,0 +1,23 @@
+php artisan key:generate
+DB_PREFIX=blog
+'prefix' => env('DB_PREFIX', ''),
+	echo config('app.debug');
+	echo config('app.timezone');
+	echo config('database.default');
+	echo config('database.connections.mysql.prefix');
+
+.env配置文件
+	APP_DEBUG=true
+	APP_KEY=base64:3i79nDs5ejiA4HIPHGDQA7BqgF++iffDKvqgEfb6HyY=
+	DB_HOST=127.0.0.1
+	DB_PORT=3306	
+	DB_DATABASE=homestead
+	DB_USERNAME=homestead
+	DB_PASSWORD=secret
+	SESSION_DRIVER=file
+
+
+
+
+
+

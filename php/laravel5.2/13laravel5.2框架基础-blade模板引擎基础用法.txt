@@ -1,0 +1,16 @@
+{{$data['name']}}
+@{{$data['age']}}	@屏蔽掉blade的语法解析
+{{$laravel or 'xxx'}}	默认值
+{{isset($xd)?$xd:'aaa'}}	三元表达式
+可以转移js脚本
+{!!$js!!}	这样可以输出js代码
+blade模板引擎基础用法
+	{{$name}}
+	@{{name}}
+	{{$name or 'default'}}
+	{{isset($name)?$name:'default'}}
+	{!!$str!!}
+   
+
+
+

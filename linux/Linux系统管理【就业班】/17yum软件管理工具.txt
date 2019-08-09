@@ -1,0 +1,85 @@
+yum管理软件包/软件组、yum缓存及本地安装
+yum软件管理工具
+	————软件的查询/安装/卸载
+查看软件列表
+	基本操作
+		-用法：
+			yum list [软件名]
+			yum list installed
+			yum list available
+				yum list	列出所有包
+查询软件信息
+	基本操作
+		-用法：
+			yum search 关键词
+			yum info [软件名]
+			yum provides 文档路径...
+				yum search httpd	通过关键词httpd查找软件
+				yum info httpd	查看软件包httpd的描述
+				yum provides /etc/passwd	查看哪些软件能提供/etc/passwd文件
+安装/卸载软件包
+	基本操作
+		用法：
+			yum [-y] 指令 [软件名]...
+	主要指令
+		-install：安装指导软件包，类似于，rpm -i
+		-update：升级指定软件包
+		-remove：卸载指定软件包，类似于，rpm -e
+			yum -y remove vim-common	分析依赖，自动卸载必要软件
+			yum -y install vim-enhanced	分析依赖，自动安装必要软件
+yum软件管理工具
+	————软件的分组控制					批量安装软件包
+查看软件组
+	基本操作
+		用法：
+			yum grouplist [软件组名]
+			yum groupinfo 软件组名
+				yum grouplist
+				yum groupinfo "开发工具"
+安装/卸载软件组
+	基本操作
+		——用法：
+			yum [-y] 指令 [软件组名]...
+		主要指令
+			-groupinstall：安装指定的软件组
+			-groupupdate：升级指定的软件组
+			-groupremove：卸载软件组
+				yum groupinfo "联网工具"
+				yum groupinstall "联网工具"
+软件组管理示例
+	快速安装开发环境
+		-提供gcc编译器、make连接工具等
+		-安装"开发工具"或"development tools"软件组
+			yum -y groupinstall "development tools"
+			yum list gcc make
+yum软件管理工具
+	————缓存及本地安装
+yum的缓存机制
+	存放位置：/var/cache/yum/
+		grep cache /etc/yum.conf
+		keepcache=0		不保留下载的rpm文件
+	排除缓存异常的故障
+		-清空缓存、再次查询或更新时，会自动重建
+			yum clean all	清空索引缓存			/var/cache/yum/硬件平台/仓库		缓存目录
+			yum repolist
+从yum仓库下载软件包
+	用法：
+		yumdownloader [选项]... 软件名...
+		--urls，查看指定仓库的仓库地址
+		--resolve，分析依赖关系，将需要的软件包也一起下载
+			yumdownloader ...	只下载指定的软件包	wireshark.x86_64
+			yumdownloader --resolve ...	将依赖包也一起下载
+yum本地安装
+	适用的场合
+		-主软件的rpm文件已下载到本地
+		-需要利用yum源来解决必要的软件依赖关系
+			yum -y localinstall wireshark*.rpm
+	
+	
+	
+	
+	
+	
+	
+	
+	

@@ -1,0 +1,60 @@
+yun原理及仓库准备、客户端配置
+yum更新机制
+	————yun原理及仓库准备
+yum概述
+	yum，yellowdog updater modify
+		-基于rpm包构建的软件更新机制
+		-自动解决软件包依赖关系
+		-所有软件包由集中的yum软件仓库提供
+						软件仓库
+				|		|		|		|	yum更新		cs架构
+			客户机1		客户机2		...		客户机n	
+关于仓库
+	准备大量的rpm软件包
+		-red hat发布的rpm包集合
+		-第三方、用户自定义的rpm包集合
+	以哪种方式提供给客户机
+		-本地目录：file://...
+		-ftp或http服务：ftp://...、http://...
+快速搭建yum仓库
+	直接访问rhel6光盘目录
+		-以触发挂载点 /misc/cd/ 为例，只需插入光盘
+		-提供给本机作为yum软件源
+			ls /misc/cd/repodata/	检查仓库档案
+				repomd.xml				仓库索引及校验信息		插入光盘yum源就搭建好了
+yum更新机制
+	————配置yum客户端
+yum客户端设置
+	主要文件
+		-基本设置：/etc/yum.conf	一般不需要更改，只需要知道作用就可以了	全局配置文件
+		-仓库配置：/etc/yum.repos.d/*.repo	最关键的配置文件	告诉yum仓库在哪里
+		-日志文件：/var/log/yum.log
+			cat /etc/yum.conf
+				keepcache=0		软件装完以后不保留缓存的rpm文件
+				logfile=/var/log/yum.log		日志文件
+				gpgcheck=1		检查软件包的签名
+仓库配置解析
+	.repo基本配置项
+		-[源名称]：自定义名称，具有唯一性
+		-name：本软件源的描述字符串
+		-baseurl：指定yum服务端的url地址
+		-enabled：是否启用此频道
+		-gpgcheck：是否验证待安装的rpm包文件
+		-gpgkey：用于rpm验证的秘钥文件
+配置yum客户端
+	创建rhel6.repo配置文件
+		-可用的软件源位于本机 /misc/cd/ 目录
+			vim /etc/yum.repos.d/rhel6.repo
+				[rhel6]
+				name=red hat enterprise linux 6
+				baseurl=file:///misc/cd
+				enabled=1
+				gpgcheck=1
+				gpgkey=...
+确保yum源可用
+	查看可用的yum仓库
+		yum repolist
+		yum list
+	
+				
+				

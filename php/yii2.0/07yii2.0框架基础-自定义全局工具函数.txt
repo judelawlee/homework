@@ -1,0 +1,21 @@
+require __DIR__ . '/../helper/function.php';
+function p($var){
+	echo '<pre>';
+	print_r($var);
+	echo '</pre>';
+}	
+function dd($var){
+	echo '<pre>';
+	var_dump($var);		可以输出false		$data=false;
+	echo '</pre>';
+	die;
+}
+$data=[
+	'name'=>'xuduo3',
+	'age'=>33,
+	
+];
+p($data);
+dd($data);
+		
+		

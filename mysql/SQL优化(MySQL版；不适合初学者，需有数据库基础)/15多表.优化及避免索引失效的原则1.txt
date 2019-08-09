@@ -1,0 +1,154 @@
+(2)两表优化
+	teacher						course						
+	id cid					id		name
+	1	2					1		c
+	2	1					2		java
+	3	3					3		php
+	create table teacher(
+		id int primary key,
+		cid int not null
+	);
+	insert into teacher values(1,2);
+	insert into teacher values(2,1);
+	insert into teacher values(3,3);	
+	create table course(
+		id int primary key,
+		name varchar
+	);
+	insert into course values(1,'c');
+	insert into course values(2,'java');
+	insert into course values(3,'php');
+	commit;
+	左连接
+		select * from teacher t left outer join course c on t.cid=c.id where c.name='java';
+		explain select * from teacher2 t left outer join course2 c on t.cid=c.id where c.name='java';
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                          |
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		|  1 | SIMPLE      | t     | ALL  | NULL          | NULL | NULL    | NULL |    3 |                                |
+		|  1 | SIMPLE      | c     | ALL  | PRIMARY       | NULL | NULL    | NULL |    3 | Using where; Using join buffer |
+		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
+		索引往哪张表加？
+		小表驱动大表
+		where 小表.x=大表.y;
+		小表：10
+		大表：300
+		for(int i=0;i<10;i++){
+			for(int j=0;i<300;j++){
+				...
+			}
+		}
+		where 大表.y=大表.x;
+		for(int j=0;i<300;j++){
+			for(int i=0;i<10;i++){
+				...
+			}
+		}
+		以上2个for循环，最终都会循环3000次，但是对于双层循环来说，一般建议将数据少的循环放外层，数据多的循环放内存。
+		对于程序来说，外层循环少，内存循环多，程序的性能高。
+		当编写 t.cid=c.id 时，将数据量小的表放左边(假设此事t表数据量少)
+		索引建立在经常使用的字段上。
+		本题由 t.cid=c.id 可知，t.id字段使用较频繁，因此在该字段上加索引。
+		一般情况对于左外连接给左表加索引，右外连接给右表加索引
+		alter table teacher add index idx_id(cid);
+		explain select * from teacher2 t left outer join course2 c on t.cid=c.id where c.name='java';
+		+----+-------------+-------+-------+---------------+--------+---------+------+------+--------------------------------+
+		| id | select_type | table | type  | possible_keys | key    | key_len | ref  | rows | Extra                          |
+		+----+-------------+-------+-------+---------------+--------+---------+------+------+--------------------------------+
+		|  1 | SIMPLE      | t     | index | idx_id        | idx_id | 4       | NULL |    3 | Using index                    |
+		|  1 | SIMPLE      | c     | ALL   | PRIMARY       | NULL   | NULL    | NULL |    3 | Using where; Using join buffer |
+		+----+-------------+-------+-------+---------------+--------+---------+------+------+--------------------------------+
+		alter table course add index idx_name(name);
+		explain select * from teacher2 t left outer join course2 c on t.cid=c.id where c.name='java';
+		+----+-------------+-------+------+------------------+----------+---------+-----------+------+--------------------------+
+		| id | select_type | table | type | possible_keys    | key      | key_len | ref       | rows | Extra                    |
+		+----+-------------+-------+------+------------------+----------+---------+-----------+------+--------------------------+
+		|  1 | SIMPLE      | c     | ref  | PRIMARY,idx_name | idx_name | 93      | const     |    1 | Using where; Using index |
+		|  1 | SIMPLE      | t     | ref  | idx_id           | idx_id   | 4       | myDB.c.id |    1 | Using index              |
+		+----+-------------+-------+------+------------------+----------+---------+-----------+------+--------------------------+
+	Using join buffer:extra的一个选项，说明mysql底层动你的sql了，你的sql写的太差，mysql看不下去去。作用mysql引擎使用了连接缓存。
+(3)三张表优化
+	a.小表驱动大表
+	b.索引建立在经常使用的字段上
+7.避免索引失效的一些原则				in	
+	复合索引
+		a.复合索引，不要跨列或无序使用(最佳左前缀)
+			(a,b,c)
+		b.复合索引，尽量使用全索引匹配
+	不要在索引上进行任何操作(计算、函数、类型转换)，否则类型失效
+		select ... where a.x=...	假设a.x是索引
+	select * from book where authorid=1 and cateid=2;	
+	explain select * from book where authorid=1 and cateid=2;		用到了2个索引
+	+----+-------------+-------+------+---------------+---------+---------+-------------+------+-------+
+	| id | select_type | table | type | possible_keys | key     | key_len | ref         | rows | Extra |
+	+----+-------------+-------+------+---------------+---------+---------+-------------+------+-------+
+	|  1 | SIMPLE      | book  | ref  | idx_aci       | idx_aci | 8       | const,const |    1 |       |
+	+----+-------------+-------+------+---------------+---------+---------+-------------+------+-------+
+	explain select * from book where authorid=1 and cateid*2=2;		用到了1个索引
+	+----+-------------+-------+------+---------------+---------+---------+-------+------+-------------+
+	| id | select_type | table | type | possible_keys | key     | key_len | ref   | rows | Extra       |
+	+----+-------------+-------+------+---------------+---------+---------+-------+------+-------------+
+	|  1 | SIMPLE      | book  | ref  | idx_aci       | idx_aci | 4       | const |    1 | Using where |
+	+----+-------------+-------+------+---------------+---------+---------+-------+------+-------------+
+	explain select * from book where authorid*2=1 and cateid*2=2;		用到了0个索引
+	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+	| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra       |
+	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+	|  1 | SIMPLE      | book  | ALL  | NULL          | NULL | NULL    | NULL |    5 | Using where |
+	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+	explain select * from book where authorid*2=1 and cateid=2;		用到了0个索引
+	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+	| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra       |
+	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+	|  1 | SIMPLE      | book  | ALL  | NULL          | NULL | NULL    | NULL |    5 | Using where |
+	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+	对于复合索引，如果左边索引失效，右边的索引索引失效	例如(a,b,c) b失效，b,c同时失效如果是单独的索引，则不会出现这个情况
+	drop index idx_aci on book;
+	alter table book add index idx_authorid(authorid);
+	alter table book add index idx_cateid(cateid);
+	explain select * from book where authorid*2=1 and cateid=2;
+	+----+-------------+-------+------+---------------+------------+---------+-------+------+-------------+
+	| id | select_type | table | type | possible_keys | key        | key_len | ref   | rows | Extra       |
+	+----+-------------+-------+------+---------------+------------+---------+-------+------+-------------+
+	|  1 | SIMPLE      | book  | ref  | idx_cateid    | idx_cateid | 4       | const |    2 | Using where |
+	+----+-------------+-------+------+---------------+------------+---------+-------+------+-------------+
+	复合索引不能使用不等于(!=、<>)或is null(is not null)，否则自身已经右侧所有全部失效
+		select * from book where authorid=1 and cateid=2;
+		explain select * from book where authorid=1 and cateid=2;
+		+----+-------------+-------+------+-------------------------+--------------+---------+-------+------+-------------+
+		| id | select_type | table | type | possible_keys           | key          | key_len | ref   | rows | Extra       |
+		+----+-------------+-------+------+-------------------------+--------------+---------+-------+------+-------------+
+		|  1 | SIMPLE      | book  | ref  | idx_authorid,idx_cateid | idx_authorid | 4       | const |    1 | Using where |
+		+----+-------------+-------+------+-------------------------+--------------+---------+-------+------+-------------+
+		sql优化是一种概率层面的优化，至于是否实际使用了我们的优化，需要通过explain进行推测
+		explain select * from book where authorid!=1 and cateid=2;			!=把idx_authorid干掉了
+		+----+-------------+-------+------+-------------------------+------------+---------+-------+------+-------------+
+		| id | select_type | table | type | possible_keys           | key        | key_len | ref   | rows | Extra       |
+		+----+-------------+-------+------+-------------------------+------------+---------+-------+------+-------------+
+		|  1 | SIMPLE      | book  | ref  | idx_authorid,idx_cateid | idx_cateid | 4       | const |    2 | Using where |
+		+----+-------------+-------+------+-------------------------+------------+---------+-------+------+-------------+
+		explain select * from book where authorid!=1 and cateid!=2;		索引都被干掉了
+		+----+-------------+-------+------+-------------------------+------+---------+------+------+-------------+
+		| id | select_type | table | type | possible_keys           | key  | key_len | ref  | rows | Extra       |
+		+----+-------------+-------+------+-------------------------+------+---------+------+------+-------------+
+		|  1 | SIMPLE      | book  | ALL  | idx_authorid,idx_cateid | NULL | NULL    | NULL |    5 | Using where |
+		+----+-------------+-------+------+-------------------------+------+---------+------+------+-------------+
+
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	
+	
+	
+	
+	
+	
+	

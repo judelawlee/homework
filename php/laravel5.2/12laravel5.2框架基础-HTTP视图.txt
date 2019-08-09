@@ -1,0 +1,35 @@
+Route::get('view', function () {
+	return view('mylaravel');
+});	
+		
+什么是视图
+	处理结果的可视化
+数据传递
+	1、with
+		$name='xuduo3';
+		return view('mylaravel')->with('name',$name);
+		
+		$name='xuduo3';
+		$age='33';
+		return view('mylaravel')->with('name',$name)->with('age',$age);
+	2、传参
+		$data=['name'=>'xuduo3','age'='33'];
+		return view('mylaravel',$data);
+	3、compact
+		$title='我在学习laravel课程';
+		$data=['name'=>'xuduo3','age'=>'33'];
+		return view('mylaravel',compact('data','title'));	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

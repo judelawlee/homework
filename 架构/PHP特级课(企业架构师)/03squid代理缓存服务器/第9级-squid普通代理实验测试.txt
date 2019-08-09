@@ -1,0 +1,104 @@
+1.安装squid软件包
+	yum -y install squid*
+2.squid配置文件
+	/etc/squid/squid.conf
+3.启动squid服务
+	service squid start/restart
+4.停止squid服务
+	service squid stop
+5.重新加载配置文件
+	squid -k reconfig
+						私网	公网
+		win7---------------→squid----------------->web server
+	
+	模拟环境，win7是内部员工，一个linux squid代理服务器(两个网卡)，一个外部服务器(internet)
+	win7:192.168.10.2/24
+	创建两个虚拟机
+	squid-ptdl-server、squid-ptdl-web-server
+	用wm1(xp、squid),则它们在连了一个交换机，可以通信
+	用vm2(squid、web server),则它们在连了一个交换机，可以通信
+	
+	进程就是正在运行的程序，进程一定有端口，向外提供服务
+
+常用配置项
+		http_port 192.168.10.1:3128
+		cache_mem 64MB
+		maximum_object_size 4096KB
+		reply_body_max_size 10480000 allow all
+		access_log /var/log/squid/access.log
+		visible_hostname 192.168.10.1
+		cache_dir ufs /var/spool/squid 100 16 256			16个一级目录，每个一级目录又有256二级目录
+普通squid代理服务器
+	普通代理服务的典型应用环境
+					squid代理服务器---------------------------------internet----------------------web server
+	eth0:192.168.10.1/24		eth1:200.168.10.1/24												200.168.10.2/24
+					|
+				 交换机
+				|		|
+			局域网pc	局域网pc 192.168.10.2/24
+配置squid普通代理
+	ifconig eth0 192.168.10.1 netmask 255.255.255.0
+	ping 192.168.10.2
+	关闭防火墙
+	ifconig eth1 200.168.10.1 netmask 255.255.255.0
+	yum -y install squid*
+	vim /etc/squid.conf
+	vim /etc/squid.conf.default
+	mv /etc/squid.conf /etc/squid.conf.bak
+	vim /etc/squid.conf
+	
+	设置squid服务器端(192.168.10.1)
+	http_port 192.168.10.1:3128
+	visible_hostname 192.168.10.1
+	acl innet src 192.168.10.0/24
+	acl all src 0.0.0.0/0.0.0.0(改成all)
+	reply_body_max_size 10480000 allow all
+	access_log /var/log/squid/access.log
+	http_access allow innet
+	http_access deny all
+	
+	netstat -tunp | grep :3128	检查端口开了没有
+	pstree | grep squid		查看进程开发了没有
+	cd /var/log/squid
+	ls
+	tail -f		跟踪日志	store.log
+	
+	初始化squid缓存目录(squid -z)
+配置web server	
+	ifconig eth0 200.168.10.2 netmask 255.255.255.0
+	ping 200.168.10.1	
+	
+	网关：数据的出口
+	
+	chkconfig httpd on
+	chkconfig httpd --list	查看启动级别
+squid普通代理的验证
+	查看代理服务器日志
+		http//:200.168.10.2
+		网页访问成功后，检查代理服务器的日志文件，应发现客户机的http访问记录
+		tall -1 /var/log/squid/access.log
+查看外部web服务器日志
+	tail -1 /var/log/httpd/access.log
+		查看外部测试机的web访问日志，应发现进行访问的是代理服务器主机，200.168.10.1，而不是客户机
+acl访问控制
+	acl(access control list，访问控制列表)
+		可以从客户机的ip地址、请求访问的url/域名/文件类型、访问时间、并发请求数等各方面进行控制
+	应用访问控制的方式
+		定义acl列表
+			acl 列表名称 列表类型 列表内容
+		针对acl列表进行限制
+			http_access allow或deny 列表名
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

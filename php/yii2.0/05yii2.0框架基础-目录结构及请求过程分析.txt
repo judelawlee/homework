@@ -1,0 +1,45 @@
+composer.json	composer配置文件，描述包信息
+config/	包含应用配置及其他配置
+	console.php	控制台应用配置信息
+	web.php	web应用配置信息
+commands/	包含控制台命令类
+controllers/	包含控制器类
+models/	包含模型类
+runtime/	包含yii在运行时生成的文件，例如日志和缓存文件
+vendor/	包含已经安装的composer包，包括yii框架自身
+views/	包含视图文件
+web/	web应用根目录，包含web入口文件
+	assets/	包含yii发布的资源文件(js和css)
+	index.php	应用入口文件
+yii	yii控制台命令执行脚本
+
+一次完整的请求过程
+	
+						入口脚本					应用主体
+	用户------1------→加载应用配置				解析路由(route)←-----3------请求request
+							↓						↓
+						运行应用-------2-------→创建控制器
+													↓4
+												控制器(controller)
+												创建动作
+													↓5
+								--------6-------实际过滤
+								|					↓7						db
+								↓				动作(action)				↓
+							响应response		加载模型←-------8-------模型model
+								↑					↓
+								----------------渲染视图←-------9-------视图view
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,36 @@
+路由分组
+	1.命名空间
+	2.路由前缀
+	3.子域名路由
+	4.中间件
+防止csrf攻击
+	1.注意laravel的版本差异
+	2.artisan目录查看资源
+		session(['key'=>123]);
+		echo session('key');	需要开发web中间件
+	php artisan	查看全部artisan命令
+	php artisan make:middleware
+	Route::group(['prefix' => 'admin','namespace' => 'Admin','middleware'=>'admin.login'], function(){
+		Route::get('login', 'LoginController@login');
+		Route::get('index', 'IndexController@index');
+	});	
+	中间件的作用是作为一层保护，拦截
+	  public function handle($request, Closure $next)
+		{
+			if(session('admin')!='admin'){
+				return redirect('admin/login');
+			}
+			return $next($request);
+		}	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

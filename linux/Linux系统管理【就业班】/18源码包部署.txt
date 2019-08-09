@@ -1,0 +1,127 @@
+编译安装分步解析、httpd编译安装实例
+	源码包部署
+		————编译安装介绍
+源码编译的优势
+	主要体现在
+		-获得软件的最新版，及时修复bug
+		-软件功能可按需选择/定制(DIY手工打造)
+		-有更多软件可以选择
+		-源码包适用于各种平台
+		-...
+准备编译环境
+	开源软件多使用C/C++语言开发
+		-需要gcc、make等编译工具
+		-rhel仓库提供的"开发工具"软件组
+			gcc --version
+			g++ --version
+			make --version
+编译安装"四步曲"
+	下载源码包		步骤1：tar 解包，释放源代码至指定目录
+					步骤2：./configure 配置，指定安装目录/功能模块等选项			脚本文件
+					步骤3：make 编译，生成可执行的二进制程序文件
+					步骤4：make install 安装，将编译好的文件复制到安装目录
+					测试及应用/维护软件
+源码包部署
+	————编译过程分步解析
+nmap扫描工具
+	network mapper，网络勘查员
+		-著名的开源软件项目之一
+		-是一款强大的网络扫描及安全审计工具
+		-官方网站：nmap.org
+1.下载及解包
+	从官网下载最新源码包，并释放源码文件
+		-建议释放到/usr/src/目录下
+		-解包后标准位置：/usr/src/软件名-版本号/
+			tar xvf nmap-6.47.tar.gz -C /usr/src/
+			ls /usr/src/nmap-6.47/
+2.配置		
+	使用configure脚本进行配置
+		-通过"./configure --help"可以查看帮助
+		-典型配置参数：--prefix=安装目录
+			cd /usr/src/nmap-6.47/
+			./configure --prefix=/usr/local/nmap		删除软件的只要把这个软件夹删除即可
+			ls Makefile		配置成功的制作清单		是否配置成功的依据
+3.编译
+	执行make命令										yum install gcc-c++
+		-根据Makefile配置将文本代码制作成二进制程序
+		-准备好必要的程序配置、文档及手册
+			make
+			ls nmap *.o
+4.安装
+	执行make install命令
+		-将制作好的程序及相关文件部署到系统的安装目录
+		-独立于源码，方便用户使用此软件
+			make install
+			ls -F /usr/local/nmap/
+			ls -F /usr/local/nmap/bin/
+	make && make install
+验证安装结果
+	查看安装目录/了解程序的用法
+		-利用帮助机制、官方文档
+			/usr/local/nmap/bin/nmap --help
+			/usr/local/nmap/bin/nmap localhost	扫描本机
+源码包部署
+	————源码安装httpd服务器
+httpd网站服务软件
+	apache http server 
+		-源于a patchy server，著名的开源web服务器软件
+		-官方网站httpd.apache.org
+编译安装httpd软件
+	下载httpd-2.2.26.tar.gz源码包
+		-依次执行解包、配置、编译、安装的过程
+		-安装到/usr/local/httpd/
+			tar xvf httpd-2.2.26.tar.gz -C /usr/src/
+			cd /usr/local/httpd-2.2.26/
+			./configure --prefix=/usr/local/httpd/
+			make && make install
+			利用&&连接将编译和安装两个步骤"二合一"
+验证安装结果
+	基本的目录结构
+		-bin/* 程序文件、htdocs/*.html 网页文件
+		-conf/httpd.conf 服务配置文件
+		-manual/*.html 官方手册页
+			ls -F /usr/local/httpd/ 
+			-F参数使得ls命令可以在显示子目录的时候在它的文件名之后加上一个斜线(“/”)字符。
+			而文件后面的星号(“*”)字符表示这是一个可执行程序 
+web服务测试
+	部署网页->启动服务->浏览网页
+		cat /usr/local/httpd/htdocs/index.html
+		/usr/local/httpd/bin/apachectl start	启动httpd网站服务
+		yum -y remove httpd	防止发生冲突
+源码包部署
+	————安装位置及卸载
+安装目录的选择
+	集中模式
+		-/usr/local/软件名/{bin,lib,sbin,share,...}
+		-方便卸载，不方便使用
+	分散模式
+		-/usr/local/{bin,lib,sbin,share,...}\
+		-方便使用，不方便卸载
+			ls -F /usr/local/nmap/
+怎样用起来更方便？
+	两种方法，二选一：
+		-直接采用分散模式，按默认位置部署
+		-或采用集中模式，在系统的程序/帮助目录下添加快捷方式
+			ln -s /usr/local/nmap/bin/nmap /usr/local/bin/
+			which -a nmap
+			echo $PATH
+源码软件的卸载
+	不要与rpm软件包混淆
+		-与rpm机制无关，因此不受rpm命令管理
+		-同一软件可以与rpm安装的并存，但是使用时要避免出现冲突
+	卸载的处理
+		-个别软件支持make uninstall反安装(需要保留源码目录)
+		-个别软件提供类似uninstall.sh的专用工具
+		-大多软件只能手动删除已安装的文档
+			
+			
+			
+			
+			
+		
+		
+		
+		
+		
+		
+		
