@@ -1,0 +1,193 @@
+acl访问控制
+	acl(access control list，访问控制列表)
+		可以从客户机的ip地址、请求访问的url/域名/文件类型、访问时间、并发请求数等各方面进行控制
+	应用访问控制的方式
+		定义acl列表
+			acl 列表名称 列表类型 列表内容
+		针对acl列表进行限制
+			http_access allow或deny 列表名
+最基本acl列表控制
+	最基本acl列表控制示例
+		禁止任何客户机使用代理服务
+			acl all src 0.0.0.0/0.0.0.0
+			http_access deny all
+acl列表类型
+	常用的acl列表类型
+		src				源ip
+		dst				目的ip
+		port			端口
+		srcdomain		源域名
+		dstdomain		目的域名
+		time			时间
+		maxconn			最大连接
+		url_regex		url正则过滤
+		urlpath_regex	urlpath正则过滤
+定义acl列表		
+	acl列表定义示例
+		acl lan1 src 192.168.1.0/24
+		acl pc1 src 192.168.1.66/32
+		acl blk_domain dstdomain .qq.com .kaixin001.com
+		acl work_hours time MTWHF 08:30-17:30			周一到周五
+		acl max20_conn maxconn 20
+		acl blk_url url_regex -i ^rtsp:// ^mms://
+		acl blk_words urlpath_regex -i sex adult
+		acl realfile urlpath_regex -i \.rmvb$ \.rm$ 
+允许或拒绝acl列表
+	根据已经定义的部分acl列表进行访问控制
+		http_access deny lan1 blk_url
+		http_access deny lan1 blk_words
+		http_access deny pc1 realfile
+		http_access deny pc1 max20_conn
+		http_access allow lan1 work_hours
+acl规则匹配顺序
+	访问控制规则的匹配顺序
+		没有设置任何规则时
+			将拒绝所有客户端的访问请求
+		有规则但找不到相匹配的项时
+			将采用最后一条规则相反的权限，即如果最后一条规则时allow，那么就拒绝客户端的请求，否则允许该请求
+配置squid透明代理	
+	实现透明代理的基本条件
+		前提：
+			1.客户机的web访问数据要能进过防火墙
+			2.代理服务器构建在网关主机中
+		配置要求：
+			1.代理服务器程序能够支持透明代理
+			2.配置iptables将客户机的web请求转发到squid代理端口
+设计squid透明代理环境
+	透明代理服务的典型应用环境
+				squid透明代理服务器---------------------------------internet----------------------web server
+	eth0:192.168.10.1/24		eth1:200.168.10.1/24												200.168.10.2/24
+					|
+				 交换机
+				|		|
+			局域网pc	局域网pc 192.168.10.2/24			
+	如果数据的目的ip不是自己的，自己的没法转发，则会把数据杀掉，(广播)
+	在杀掉数据之前，把数据丢到3128端口
+配置透明代理
+	基本实现步骤
+		1.修改squid.conf配置文件
+			http_port 192.168.10.1:3128 transparent
+		2.重新加载该配置
+			squid -k reconfig
+		3.添加iptables规则，把内部的http请求重定向到3128端口
+			iptables -t nat -I PREROUTING -i eth0 -s 192.168.10.0/24 -p tcp --dport 80 -j REDIRECT --to 3128
+		4.内部用户不需要在浏览器中设置代理，只需要设置网关
+		#至于内部dns指向可以把squid服务器同时做成缓存dns服务器，内部用户指向这台squid内部即可
+	模拟环境，win7是内部员工，一个linux squid代理服务器(两个网卡)，一个外部服务器(internet)
+		win7:192.168.10.2/24	网关192.168.10.1
+		创建两个虚拟机
+		squid-tmdl-server、squid-tmdl-web-server
+		用wm1(xp、squid),则它们在连了一个交换机，可以通信
+		用vm2(squid、web server),则它们在连了一个交换机，可以通信
+	配置squid透明代理
+		iptables -t nat -I PREROUTING -i eth0 -s 192.168.10.0/24 -p tcp --dport 80 -j REDIRECT --to 3128
+		iptables -L
+		iptables -t nat -L
+		ifconig eth0 192.168.10.1 netmask 255.255.255.0
+		ping 192.168.10.2
+		ifconig eth1 200.168.10.1 netmask 255.255.255.0
+		yum -y install squid*
+		vim /etc/squid/squid.conf
+		vim /etc/squid/squid.conf.default
+		mv /etc/squid/squid.conf /etc/squid/squid.conf.bak
+		vim /etc/squid/squid.conf
+
+		设置squid服务器端(192.168.10.1)
+		http_port 192.168.10.1:3128 transparent
+		visible_hostname 192.168.10.1
+		acl innet src 192.168.10.0/24
+		acl all src 0.0.0.0/0.0.0.0(改成all)
+		reply_body_max_size 10480000 allow all
+		access_log /var/log/squid/access.log
+		http_access allow innet
+		http_access deny all
+		netstat -tunp | grep :3128	检查端口开了没有
+		pstree | grep squid		查看进程开发了没有
+		cd /var/log/squid
+		ls
+		tail -f		跟踪日志	store.log
+		初始化squid缓存目录(squid -z)
+	配置web server	
+		ifconig eth0 200.168.10.2 netmask 255.255.255.0
+		ping 200.168.10.1	
+		网关：数据的出口
+		chkconfig httpd on
+		chkconfig httpd --list	查看启动级别
+	squid普通代理的验证
+		查看代理服务器日志
+			http//:200.168.10.2
+			网页访问成功后，检查代理服务器的日志文件，应发现客户机的http访问记录
+			tall -1 /var/log/squid/access.log
+	查看外部web服务器日志
+		tail -1 /var/log/httpd/access.log
+			查看外部测试机的web访问日志，应发现进行访问的是代理服务器主机，200.168.10.1，而不是客户机
+			注意把其他不用的网卡关闭，以防对实验造成干扰！！！
+设置squid反向代理环境
+				反向代理服务器---------------------------------internet------------------------internet中的客户机
+	eth0:192.168.10.1/24	eth1:200.168.10.1/24												200.168.10.2/24
+						|
+					 交换机
+			|		|		|		|
+	192.168.10.2/24					192.168.10.10/24
+					网站服务器群								服务器发布
+	私网ip不能出现在公网上
+配置squid反向代理
+	基本实现步骤
+		修改squid.conf文件，并重新加载该配置
+			http_access 200.168.10.1:80 vhost			虚拟的80端口
+			cache_peer 192.168.10.2 parent 80 0 originserver weight=5 max-conn=30
+			cache_peer 192.168.10.3 parent 80 0 originserver weight=5 max-conn=30
+			cache_peer 192.168.10.4 parent 80 0 originserver weight=5 max-conn=30
+			cache_peer 192.168.10.5 parent 80 0 originserver weight=1 max-conn=8
+		cache_peer server地址 服务器类型 http端口 icp端口 [可选项]
+squid反向代理测试效果
+	验证反向代理的实施效果
+		internet 200.168.10.2->200.168.10.1:80->192.168.10.2:80
+		查看反向代理服务器的访问日志信息
+			tail -1 /var/log/squid/access.log
+			win7:200.168.10.2/24	没有网关
+			创建两个虚拟机
+			squid-tmdl-server、squid-tmdl-web-server
+			用wm1(xp、squid),则它们在连了一个交换机，可以通信
+			用vm2(squid、web server),则它们在连了一个交换机，可以通信			
+		配置squid反向代理
+			ifconig eth0 200.168.10.1 netmask 255.255.255.0		
+			squid.conf
+			http_access 200.168.10.1:80 vhost			虚拟的80端口
+			cache_peer 192.168.10.2 parent 80 0 originserver
+			visible_hostname 192.168.10.1
+			reply_body_max_size 10480000 allow all
+			access_log /var/log/squid/access.log			
+			http_access allow all
+			对外的时候则防火墙没有意义了
+		配置web server	
+			ifconig eth0 192.168.10.2 netmask 255.255.255.0
+反向代理虚拟主机映射
+	基于反向代理实现虚拟主机映射
+		vi squid.conf
+			http_access 200.168.10.1:80 vhost			
+			cache_peer 192.168.10.2 parent 80 0 originserver name=a		
+			cache_peer 192.168.10.2 parent 80 0 originserver name=b
+			cache_peer_domain a www.lamp.com
+			cache_peer_domain b www.web.com
+			cache_peer_access a allow all
+			cache_peer_access b allow all
+		hosts	域名解析
+			200.168.10.1 web.hd
+			200.168.10.1 lamp.hd
+		rsync -a -e ssh 1.jpg 192.168.10.2:/root/	传输文件
+缓存查看
+	1.通过/var/log/squid/access.log
+	2.通过/var/spool/squid下的tree 00来查看文件数，然后如果有缓存，则可以通过strings 00000000x来查看
+	3.客户端通过firefox的firebug来查看请求和响应头信息，其中有缓存信息，从中可以明显的看到缓存的squid服务器
+本章小结
+	1.缓存服务器
+	2.传统代理服务器
+	3.squid访问控制
+	4.透明代理服务器
+	5.反向代理服务器		
+
+
+
+
+			

@@ -1,0 +1,25 @@
+$book=new Book();
+$book->id='7';
+$book->name='数据结构2';
+$book->authorid=3;
+$book->pubid=3;
+$book->cateid=3;
+$data=$book->insert();
+
+$book=new Book();
+$book->id='7';
+$book->name='数据结构2';
+$book->authorid=3;
+$book->pubid=3;
+$book->cateid=3;
+$data=$book->save();
+
+$book->id='15';
+$book->name='数据结构25';
+$book->authorid=13;
+$book->pubid=31;
+$book->cateid=23;
+// $data=$book->insert();
+$data=$book->save();
+$id=$book->attributes['id'];
+dd($id);

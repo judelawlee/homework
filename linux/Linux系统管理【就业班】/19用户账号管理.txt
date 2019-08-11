@@ -1,0 +1,145 @@
+账号总述、用户账号文件、用户账号增删改查
+用户账号管理
+	————账号控制总述
+基于账号的访问控制
+	基于账户身份对资源访问进行控制
+		-账号类别：用户账号、组账号
+		-识别方式：uid、gid
+	用户账号：
+		-超级用户root、系统用户、普通用户
+	组账号			组账号用来区分权限，不用于登录
+		-基本组(私有组)
+		-附加组(公共组)
+账号的存放类别
+	账号数据的存放
+		-储存在本机磁盘中————本地账户
+		-存储在网络上专门的服务器————网络账户
+本地账户的数据文件
+	-/etc/passwd、/etc/shadow
+	-/etc/group、/etc/gshadow
+解析用户账号文件
+	/etc/passwd，保存用户账号的基本信息
+	 -每个用户记录一行，以：分割为7个字段
+		head -n 1 /etc/passwd
+			字段1：用户账号的名称
+			字段2：密码字串或占位符x
+			字段3：用户账号的uid号
+			字段4：所属基本组的gid号
+			字段5：用户全名
+			字段6：宿主目录
+			字段7：登录shell程序的路径
+解析用户账号文件(续1)
+/etc/shadow，保存密码子串/有效期等信息
+	-每个用户记录一行，以：分割为9个字段
+		head -n 1 /etc/shadow
+			字段1：用户账号的名称
+			字段2：加密后的密码字符串
+			字段3：上次修改密码的时间
+			字段4：密码的最短有效天数，默认0
+			字段5：密码的最长有效天数，默认99999
+			字段6：密码过期前的警告天数，默认7
+			字段7：密码过期后多少天禁用此用户账号
+			字段8：账号失效时间，默认为空
+			字段9：保留字段(未使用)
+用户账号管理
+	————用户账号添加
+最基本的添加操作
+	1.添加用户
+		-示例：useradd zhangsan
+	2.为此用户设置登录口令
+		-示例：passwd zhangsan
+useradd添加用户
+	添加一个名为zengye的用户账号
+		useradd zengye
+		grep zengye /etc/passwd /etc/shadow
+	添加用户stu01，宿主目录设为/opt/stu01
+		useradd -d /opt/stu01 stu01
+		ls -ld /opt/stu01
+新用户的属性控制
+	useradd命令
+		-格式：useradd [选项]... 用户名
+	常用命令选项
+		-u：指定uid标记号
+		-d：指定宿主目录，缺省为/home/用户名
+		-e：指定账号失效时间
+		-g、-G：指定所属的基本组、附加组
+		-M：不为用户建立并初始化宿主目录
+		-s：指定用户的登录shell
+useradd添加用户
+	添加用户stu02，指定基本组为users 
+		useradd -g users stu02
+		grep stu02 /etc/passwd /etc/shadow
+	添加用户sys01，不建宿主目录、不用于登录
+		useradd -M -s /sbin/nologin sys01
+		grep sys01 /etc/passwd /etc/shadow
+		ls -ld /home/sys01
+用户密码控制
+	passwd命令
+		-格式：passwd [选项]... 用户名
+	常用命令选项
+		-d：清空用户的密码，使之无需密码即可登录
+		-l：锁定用户账号
+		-S：查看用户账号的状态(是否被锁定)
+		-u：解锁用户账号
+		-stdin：从标准输入(比如管道)取密码
+passwd设置口令(续1)
+	passwd stu01
+	echo 123456 | passwd --stdin stu02
+		通过 --stdin 设置密码，免除交互过程
+用户账号管理
+	————用户账号的删改查
+usermod修改用户
+	usermod命令
+		-格式：usermod [选项]... 用户名
+	常用命令选项
+		-l：更改用户账号的登录名称
+		-L：锁定用户账号
+		-U：解锁用户账号
+		-u、-d、-e、-g、-G、-s：与useradd相同
+usermod修改用户(续1)
+	将用户user01设为2019-12-30过去
+		usermod -e 2019-12-30 stu01
+		grep -E "root|stu01" /etc/shadow
+	将用户sys01的登录shell改为/bin/bash
+		usermod -s /bin/bash sys01
+		grep sys01 /etc/passwd	
+chage密码有效控制
+	管理工具chage命令
+		-格式：chage [选项] 用户名
+	常用命令选项
+		-l：列出密码有效期信息
+		-E：指定账号过期时间，YYYY-MM-DD
+		-I：指定当密码失效多少天锁定账号
+		-m：指定密码的最小天数
+		-M：指定密码的最大天数
+			chage -l root
+			chage -E 2019-10-23 root
+			chage -l root
+			chage -d 0 stu01	下次登录强制改密码
+userdel删除用户
+	userdel命令
+		-格式：userdel [-r] 用户名
+		-添加-r选项，宿主目录/用户邮件也一并删除
+			ls -ld /home/stu02
+			userdel -r stu02
+			ls -ld /home/stu02
+查找用户id
+	id命令，identity
+		-格式：id [选项] 用户名
+			id root
+			
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

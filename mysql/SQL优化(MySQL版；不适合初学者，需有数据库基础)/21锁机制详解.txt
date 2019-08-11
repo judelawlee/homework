@@ -1,0 +1,100 @@
+11.锁机制：解决因资源共享而造成的并发问题
+	示例：买最后一件衣服
+		A：x	买	买之前：x加锁->试衣服...下单...付款...打包->x解锁
+		B：x	买：发现x已被加锁，等待x解锁，x已售空
+	分类：
+		操作类型：
+			读锁(共享锁)：对同一个数据(衣服)，多个读操作可以同时进行，互不干扰
+			写锁(互斥锁)：如果当前写操作没有完毕(买衣服的一系列操作)，则无法进行其他的读操作、写操作
+		操作范围：
+			表锁：一次性锁一张表，对一张表加锁，如myisam存储引擎，开销小、加锁快，无死锁，但锁的范围大容易发生锁冲突，并发度低。
+				难免一条数据被同一个人盯上了。
+			行锁：一次性对一条数据加锁。如innodb使用的就是行锁，开销大，加锁慢，容易出现死锁，锁的范围较小，不易发生锁冲突，
+				并发度高(很小的概率发生高并发问题：脏读、幻度、不可重复读)。
+			页锁：
+示例：
+	表锁：
+		create table tablelock(
+			id int primary key auto_increment,	--自增操作mysql/sql server支持，oracle不支持
+			name varchar(20)
+		)engine myisam;
+		insert into tablelock values('a1');
+		insert into tablelock values('a2');
+		insert into tablelock values('a3');
+		insert into tablelock values('a4');
+		insert into tablelock values('a5');
+		commit;
+		增加锁的语法
+		lock table 表1 read/write,表2 read/write ...
+		查看加锁的表：
+		show open tables;
+		+--------------------+----------------------------------------------+--------+-------------+
+		| Database           | Table                                        | In_use | Name_locked |
+		+--------------------+----------------------------------------------+--------+-------------+
+		| mysql              | time_zone_transition_type                    |      0 |           0 |
+		| performance_schema | events_waits_summary_global_by_event_name    |      0 |           0 |
+		| testdata           | dept                                         |      0 |           0 |
+		| performance_schema | events_waits_history_long                    |      0 |           0 |
+		| mysql              | event                                        |      0 |           0 |
+		| mysql              | host                                         |      0 |           0 |
+		| myDB               | book                                         |      0 |           0 |
+		| mysql              | tables_priv                                  |      0 |           0 |
+		| mysql              | procs_priv                                   |      0 |           0 |
+		| mysql              | func                                         |      0 |           0 |
+		| performance_schema | events_waits_history                         |      0 |           0 |
+		| mysql              | time_zone_name                               |      0 |           0 |
+		| mysql              | user                                         |      0 |           0 |
+		| myDB               | tablelock                                    |      0 |           0 |
+		| performance_schema | file_instances                               |      0 |           0 |
+		| performance_schema | cond_instances                               |      0 |           0 |
+		| mysql              | plugin                                       |      0 |           0 |
+		| mysql              | proc                                         |      0 |           0 |
+		| mysql              | proxies_priv                                 |      0 |           0 |
+		| mysql              | time_zone                                    |      0 |           0 |
+		| performance_schema | rwlock_instances                             |      0 |           0 |
+		| performance_schema | setup_consumers                              |      0 |           0 |
+		| testdata           | emp                                          |      0 |           0 |
+		| mysql              | columns_priv                                 |      0 |           0 |
+		| performance_schema | performance_timers                           |      0 |           0 |
+		| performance_schema | threads                                      |      0 |           0 |
+		| mysql              | general_log                                  |      0 |           0 |
+		| performance_schema | events_waits_summary_by_thread_by_event_name |      0 |           0 |
+		| performance_schema | file_summary_by_event_name                   |      0 |           0 |
+		| mysql              | time_zone_leap_second                        |      0 |           0 |
+		| performance_schema | file_summary_by_instance                     |      0 |           0 |
+		| performance_schema | setup_instruments                            |      0 |           0 |
+		| mysql              | servers                                      |      0 |           0 |
+		| performance_schema | events_waits_summary_by_instance             |      0 |           0 |
+		| mysql              | db                                           |      0 |           0 |
+		| performance_schema | setup_timers                                 |      0 |           0 |
+		| mysql              | time_zone_transition                         |      0 |           0 |
+		| performance_schema | mutex_instances                              |      0 |           0 |
+		| performance_schema | events_waits_current                         |      0 |           0 |
+		+--------------------+----------------------------------------------+--------+-------------+
+		加读锁
+			会话：session每一个访问数据库的doc就是一个会话
+			会话0：		
+				lock table tablelock read;
+				selec * from tablelock;	读(查)，可以
+				delete from tablelock where id=1;	写(增删改)，不可以
+				select * from emp;	读(查)，不可以
+				delete from emp;	写(增删改)，不可以
+				如果某一个会话对a表加读锁，则该会话可以对a表进行读操作，不能进行写操作，且该会话不能对其他表进行读或写操作。
+				即如果给a表加了读锁，则当前会话只能对a表进行读操作，其他操作都不可以
+			会话1：		
+				selec * from tablelock;	读(查)，可以
+				delete from tablelock where id=1;	写操作会一直等待，等待会话0将锁释放
+				select * from emp;	读(查)，可以
+				delete from emp;	写(增删改)，可以
+				总结：如果某一个会话对a表加读锁，则其他会话可以对a表进行读操作，等待能进行写操作，且其他会话能对其他表进行读
+				或写操作。即如果给a表加了读锁，则其他前会话能对a表进行读操作，等待写操作，其他操作都可以		
+		释放锁：unlock tables;
+		
+		
+		
+		
+		
+		
+		
+		
+		

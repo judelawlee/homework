@@ -1,0 +1,29 @@
+创建模型
+	php artisan make:model User			把模型文件放到Model文件夹下，自己新建
+namespace App\Http\Model;
+model
+	namespace App\Http\Model;
+	use Illuminate\Database\Eloquent\Model;
+	class Book extends Model{
+		protected $table='book';
+		protected $primaryKey='id';
+		public $timestamps=false;
+	}
+
+	$book=Book::where('id',1)->get();
+	$book=Book::find(3);
+	$book->name='红楼梦';
+	$book->update();
+数据表操作
+	protected $table='book';
+	protected $primaryKey='id';
+	public $timestamps=false;
+
+
+
+
+
+
+
+
+

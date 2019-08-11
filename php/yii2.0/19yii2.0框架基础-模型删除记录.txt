@@ -1,0 +1,64 @@
+//删除单条字段
+$book=Book::findOne(18);
+$data=$book->delete();
+
+$book=Book::find->where(['id'=>15])->one();
+$data=$book->delete();
+
+$book=Book::find()->where(['id'=>15])->all();
+$data=$book[0]->delete();
+dd($data);
+
+Book::deleteAll();
+
+Book::deleteAll('id=10');
+
+$data=Book::deleteAll('id=:id',[':id'=>7]);
+
+$data=Book::deleteAll('id>:id ',[':id'=>7]);
+
+$data=Book::deleteAll('id=:id number<:number',[':id'=>7,':number'=>100]);
+
+$data=Book::deleteAll('id<:id and cateid>:cateid',[':id'=>7,':cateid'=>5]);
+
+where单表查询
+	Book::find()->where(['id'=>1])->all();
+	Book::find()->where('>','id',1)->all();
+	Book::find()->where('between','id',1,2)->all();
+	
+	Book::find()->where('like','name','xxx')->all();
+	
+	one()获取一条数据
+	
+	两个快捷方法：findOne和findAll()
+大数据节省内存处理
+节省内存方式
+	以数组形式获取数据 asArray()
+	批量获取数据
+	一次取两条数据
+		foreach(Book::find()->batch(2) as $book){	分次取
+			$book是2个或更少的文字对象的数组
+		}	
+添加记录
+	$book=new Book();
+	$book->name='xxx';
+	$book->save();等同于$book->insert();
+删除数据
+	$result=Book::find()->where(['id'=>1])->all();
+	#result[0]->delete();
+	
+	$result=Book::find()->where(['id'=>1])->one();
+	$result=Book::findOne(1);
+批量删除数据
+	Book::dataAll('id=:id',[':id=>1'])
+	Book::dataAll('id=:id and num<:num',[':id=>1',':num'=>5])
+	Book::dataAll()
+	
+	
+	
+	
+	
+	
+	
+	
+	

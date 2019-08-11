@@ -1,0 +1,16 @@
+$user=['name'=>'xuduo3','age'=>'33'];
+$article=['title'=>'文章的标题'];
+return $this->renderPartial('index',compact('user','article'));
+
+<?php echo $user['name'].'--------'.$article['title'].'-----'.$user['age']; ?>
+
+yii框架没有模板引擎
+
+return $this->render('index',compact('user','article'));
+
+模板渲染有两个函数：render(会多出来很多内容)和renderPartial(原样输入)
+
+xss攻击
+$data=['str'=>'<script type="text/javascript">alert("1");</script>'];
+return $this->renderPartial('index',$data);
+<?php echo $str; ?>

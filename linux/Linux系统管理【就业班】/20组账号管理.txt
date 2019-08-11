@@ -1,0 +1,94 @@
+组账号文件、组账号增删改查、管理组成员
+组账号管理
+	————解析组账号文件
+解析组账号文件
+	/etc/group，保存组账号的基本信息
+		-每个组记录一行，以：分割4个字段
+			head -1 /etc/group
+			字段1：组账号的名称
+			字段2：密码占位符x
+			字段3：组账号的gid号
+			字段4：本组的成员用户列表
+
+解析组账号文件(续1)
+	/etc/gshadow，保存组账号的管理信息
+		-每个组记录一行，以：分割4个字段
+			head -1 /etc/gshadow
+				字段1：组账号的名称
+				字段2：加密后的密码字符串
+				字段3：本组的管理员列表
+				字段4：本组的成员用户列表
+组账号管理
+	组账号的增删改查操作
+groupadd添加组账号
+	groupadd命令
+		-格式：groupadd [-g GID] 组名
+			groupadd -g 600 stugrp
+			grep stugrp /etc/group /etc/gshadow
+groupdel删除组
+	groupdel命令
+		-格式：groupdel组名
+		-删除的目标组不能是用户的基本组
+			grep stugrp /etc/group
+			groupdel stugrp
+			grep stugrp /etc/group
+groupmod修改组
+	groupmod命令
+		-格式：
+			groupmod -g GID 组名
+			groupmod -n 新组名 组名
+				groupadd student
+				tail -1 /etc/group
+				groupmod -g 1000 -n stugrp student
+groups查询用户组信息
+	groups命令
+		groups zengye stu01				与id -Gn的效果相同
+		groups
+组账号管理
+	————管理组成员
+gpasswd管理组成员
+	gpasswd命令
+		-格式：gpasswd [选项] ... 组名
+	常用命令选项
+		-A：定义组管理员列表
+		-a:添加组成员，每次只能加一个
+		-d:删除组成员，每次只能删一个
+		-M:定义组成员用户列表，可以设置多个
+gpasswd管理组成员(续1)
+	gpasswd -A stu01 stugrp
+	grep stugrp /etc/gshadow
+	gpasswd -M zengye,stu01,sys01 stugrp
+	grep stugrp /etc/gshadow
+	gpasswd -d sys01 stugrp
+	grep stugrp /etc/gshadow
+	gpasswd -A abcd stugrp
+	grep stugrp /etc/gshadow
+	su - abcd	带环境的切换
+组账号管理
+	————基本组切换及认证
+gpasswd 设置/清除组密码
+	gpasswd命令
+		-格式：gpasswd [-r] 组账号名
+		-添加-r时为移除密码，否则设置密码
+			gpasswd stugrp
+			grep stugrp /etc/gshadow
+newgrp切换基本组
+	newgrp命令
+		-适用于零时加入一个新组的情况
+			id -gn
+			newgrp stugrp
+			id -gn
+			exit
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+				

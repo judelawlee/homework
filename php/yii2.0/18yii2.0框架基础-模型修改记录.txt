@@ -1,0 +1,18 @@
+set autocommit=1
+$book=Book::findOne(18);
+$book->name='测试修改名称';
+$data=$book->update();
+
+$book=Book::findOne(18);
+$book->name='测试修改名称save';
+$data=$book->save();
+dd($data);
+
+$book=Book::updateAllCounters(['cateid'=>1]);	//更新所有
+
+$data=Book::updateAllCounters(['cateid'=>1],['id'=>18]);
+//修改单条字段
+dd($data);
+
+
+

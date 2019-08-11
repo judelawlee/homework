@@ -1,0 +1,24 @@
+$request=\Yii::$app->request;
+$id=$request->get('id');
+	如果接收到的参数时id=1 or 1=1，就产生了sql注入
+$sql='select * from book where id='.$id;
+	如果接受到的参数时id=1;drop table book;		真的被删除了
+	这个就相当危险了
+$books=Book::findBySql($sql)->all();
+dd($books);
+
+$request=\Yii::$app->request;
+$id=$request->get('id',1);
+echo $id;
+$sql='select * from book where id=:id';	占位符
+$books=Book::findBySql($sql,[':id'=>$id])->all();
+
+
+
+
+
+
+
+
+
+

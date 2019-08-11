@@ -1,0 +1,32 @@
+$data=['str'=>'<script type="text/javascript">alert("1");</script>'];
+return $this->renderPartial('index',$data);
+视图文件：
+	echo \yii\helpers\Html::encode($str);
+	上面太长了，改进为
+	use \yii\helpers\Html;
+	echo Html::encode($str);
+	
+	echo \yii\helpers\HtmlPurifier::process($str);	助手类
+	改进为
+	use \yii\helpers\HtmlPurifier;
+	echo HtmlPurifier::process('abcd');
+
+视图分类
+	return $this->renderPartial('index',$data);
+	return $this->render('index',$data);
+数据相关
+	compact()函数创建包含变量名和他们的值的数组
+字符串过滤
+	Html::encode($str);
+	HtmlPurifier::process($str);
+数据安全
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

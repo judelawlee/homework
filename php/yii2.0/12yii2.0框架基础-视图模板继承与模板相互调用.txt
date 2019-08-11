@@ -1,0 +1,28 @@
+模板渲染的两种方式
+	return $this->renderPartial('index',$data);
+	return $this->render('index',$data);
+	
+	render和renderPartial之间最大的区别就是：一个是渲染父模板，一个是不渲染父模板。
+	其中render输出父模板的内容，将渲染的内容，嵌入父模板。
+	renderPartial则不输出父模板的内容，只对本次渲染的局部内容，进行输出。
+模板继承
+	父模板就在view目录layouts文件夹下
+	
+	public $layout='home';	定义父模板
+	<?= $content ?>	父模板调用子视图
+	
+	echo $this->render('about');	index.php		子视图相互调用
+	
+控制器写法
+	public $layout='home';
+	return $this->render('index',$data);
+	echo $this->render('about');
+模板继承属性与视图相互调用
+	
+	
+	
+	
+	
+	
+	
+	

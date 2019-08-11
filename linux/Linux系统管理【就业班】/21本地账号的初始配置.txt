@@ -1,0 +1,45 @@
+useradd设置、login.defs定义、初始化文件
+本地账号的初始化配置
+	————初始属性的定义
+useradd行为设置
+	默认配置文件：/etc/default/useradd			shell=/bin/tcsh修改配置			/etc/skel/readme
+		-对新创建的账号起作用
+			cat /etc/default/useradd
+				SKEL=/etc/skel	模板目录，分发公共文件
+login.defs登录定义
+	默认配置文件：/etc/dlogin.defs
+		-对新创建的账号起作用
+			grep -vE "^#|^$" /etc/login.defs
+			ls -A /etc/skel	用户初始文件
+本地账号的初始化配置
+	————用户环境的初始化文件
+用户初始配置文件
+	配置文件来源
+		-新建账号时，根据/etc/skel模板目录复制
+	主要的初始配置文件
+		-~/.bash_profile：每次登陆时执行
+		-~/.bashrc：每次进入新的bash环境时执行
+		-~/.bash_logout：每次退出登录时执行
+	全局配置文件：/etc/bashrc、/etc/profile
+用户初始配置文件(续1)
+	用户初始文件会调用全局配置文件
+		cat ~/.bashrc
+		vim /home/xuduo3/.bashrc	echo bash configuration		bash就会执行
+		vim /home/xuduo3/.profile	echo welcome home
+		vim /etc/profile	echo welcome to oracle linux
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

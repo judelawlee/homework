@@ -1,0 +1,40 @@
+(3)全局查询日志
+	它会记录开启之后的全部sql语句。(这些全局的操作记录，仅仅在调优、开发过程中打开，部署时需关闭，比较费性能)
+	show variables like '%general_log%';
+	+------------------+------------------------------+
+	| Variable_name    | Value                        |
+	+------------------+------------------------------+
+	| general_log      | OFF                          |
+	| general_log_file | /var/lib/mysql/localhost.log |
+	+------------------+------------------------------+
+	set global general_log=1;
+	show variables like '%general_log%';
+	+------------------+------------------------------+
+	| Variable_name    | Value                        |
+	+------------------+------------------------------+
+	| general_log      | ON                           |
+	| general_log_file | /var/lib/mysql/localhost.log |
+	+------------------+------------------------------+
+	开启后，会记录所有sql：会被记录mysql.general_log表中
+	将全部查询sql记录在表中
+	set global log_output='table'	设置将全部的数据记录在表中
+	select * from mysql.general_log;
+	+---------------------+---------------------------+-----------+-----------+--------------+---------------------------------+
+	| event_time          | user_host                 | thread_id | server_id | command_type | argument                        |
+	+---------------------+---------------------------+-----------+-----------+--------------+---------------------------------+
+	| 2019-08-11 09:31:11 | root[root] @ localhost [] |        50 |         1 | Query        | select * from emp               |
+	| 2019-08-11 09:31:20 | root[root] @ localhost [] |        50 |         1 | Query        | select count(*) from dept       |
+	| 2019-08-11 09:31:25 | root[root] @ localhost [] |        50 |         1 | Query        | select * from mysql.general_log |
+	+---------------------+---------------------------+-----------+-----------+--------------+---------------------------------+
+	帮助我们分析用的
+	将全部查询sql记录在文件中
+		set global log_output='file'
+		set global general_log_file='/tmp/general.log'
+		set global general_log=1	
+			/usr/sbin/mysqld, Version: 5.5.49-log (MySQL Community Server (GPL)). started with:
+			Tcp port: 3306  Unix socket: /var/lib/mysql/mysql.sock
+			Time                 Id Command    Argument
+			190811  9:36:54	   50 Query	select * from dept
+	
+	
+	

@@ -1,0 +1,12 @@
+对象占用的空间大于数组
+$books=Book::find()->asArray()->all();	转为数组
+foreach(Book::find()->batch(2) as $book){	分次取
+	echo count($book);
+}
+
+
+
+
+
+
+

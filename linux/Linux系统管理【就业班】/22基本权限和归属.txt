@@ -1,0 +1,114 @@
+rwx解析、chmod/chown/chgrp、默认权限
+基本权限和归属
+	————权限和归属描述
+权限和归属
+	访问权限
+		-读取：允许查看内容-read
+		-写入：允许修改内容-write
+		-可执行：-允许运行和切换-execute
+	归属关系
+		-所有者：拥有此文件/目录的用户-user
+		-所属组：拥有此文件/目录的组-group
+		-其他用户：除所有者、所属组以外的用户-other
+		-所有用户：以上三类归属合称-all						共同决定最终权限
+解析文件/目录权限
+	执行ls -l 命令查看
+		-输出信息包括7个字段
+			ls -ld /etc/passwd /boot/
+			权限位 硬链接 属主 属组 大小 最后修改时间 文件/目录名称
+解析文件/目录权限(续1)
+	权限位字段解析
+		-共10个字符，分为4组
+			类型	user权限	group权限	other权限
+			d		r w x		r - x		r - x
+			-		r w -		r - -		r - -					-就是没权限
+		ls -ld /etc/passwd /boot/
+解析文件/目录权限(续2)
+	权限位的8进制数表示
+		-r、w、x分别对应4、2、1，后三组分别求和
+			分组		user权限	group权限	other权限
+			字符		r w x		r - x		r - x
+			站位标记	1 1 1		1 0 1		1 0 1								
+			位数值		4 2 1		4 0 1		4 0 1
+			求和		7			5			5
+基本权限和归属
+	————chmod权限控制
+设置基本权限
+	chmod命令
+		格式：
+			chmod [ugoa] [+-=] [rwx] 文件 ...
+			chmod [nnn] 文件 ...
+		常用命令选项
+			-R：递归修改权限
+设置基本权限(续1)
+	使用字符权限形式
+		mkdir /data/test
+		chmod g+w,o-rw /data/test
+		ls -ld /data/test
+	使用数字权限形式
+		chmod 755 /data/test
+		ls -ld /data/test
+设置基本权限(续2)
+	echo "echo hello world ..." > test.sh
+	ls -lh test.sh
+	chmod +x test.sh
+	/root/test.sh
+基本权限和归属
+	————控制文档的默认权限			
+文件/目录的默认权限
+	新建文件/目录的默认权限？
+		-一般文件默认均不给x执行权限
+		-其他取决于umask设置
+			umask
+			umask -S
+文件/目录的默认权限(续1)
+	调整umask设置，提高安全性
+		-去除默认的所有other权限
+			umask 0027
+			umask -S
+			mkdir udir;
+			touch ufile
+			ls -ld udir ufile
+文件/目录的默认权限(续2)
+	创建新文件夹时，直接设置权限
+		-利用mkdir的-m选项
+			mkdir -m 755 udir2
+基本权限和归属
+	————chown归属控制
+修改文档的属主
+	基本用法
+		-格式：chown 属主 文档...
+			mkdir -m 755 /opt/studir
+			ls -ld /opt/studir
+			chown zengye /opt/studir
+			ls -ld /opt/studir
+修改文档的属组
+	基本用法
+		-格式：chgrp 属组 文档...
+			mkdir -m 755 /opt/studir
+			ls -ld /opt/studir
+			chgrp zengye /opt/studir
+			ls -ld /opt/studir
+同时指定属主和属组
+	基本用法
+		-格式：chown 属主:属组 文件 ...
+		-添加 -R选项递归修改权限
+			ls -ld /opt/studir
+			chown root:root /opt/studir
+			ls -ld /opt/studir
+			
+			
+			
+		
+		
+		
+		
+		
+		
+
+
+
+
+
+
+

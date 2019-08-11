@@ -1,0 +1,200 @@
+本章小结
+1.mysql用户授权
+2.mysql bin-log日志
+3.mysql主从复制
+4.mysql分区技术
+taobao mysql
+	淘宝数据库发展三个阶段
+		第一阶段
+			整个网站采用lamp架构
+			数据库采用几台mysql
+			应用系统分为前台、后台两大系统
+		第二阶段
+			mysql迁到oracle
+			pc server升级到ibm小型机
+			低端存储升级到高端存储
+		第三阶段
+			核心业务从oracle逐步迁移到分布式oracle集群中
+			大量采用pc server，采用本地硬盘
+mysql用户授权
+	登录mysql数据库
+		mysql -uroot -p
+	给从服务器设置授权用户
+		grant all slave on *.* to user@192.168.10.2 identified by "pass";
+		grant replication slave on *.* to user@192.168.10.2 identified by "pass";
+	查看用户授权表
+		select user,host,password from mysql.user;
+		+------+-----------------------+-------------------------------------------+
+		| user | host                  | password                                  |
+		+------+-----------------------+-------------------------------------------+
+		| root | localhost             | *6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9 |
+		| root | localhost.localdomain |                                           |
+		| root | 127.0.0.1             |                                           |
+		| root | ::1                   |                                           |
+		|      | localhost             |                                           |
+		|      | localhost.localdomain |                                           |
+		+------+-----------------------+-------------------------------------------+
+准备两台虚拟机，mysql-master、mysql-slave，都采用vm1网卡，可以互相ping通
+	mysql-master:ifconfig 192.168.10.1
+	mysql-slave:ifconfig 192.168.10.2
+	win7:192.168.10.3
+	pstree | grep mysql
+	netstat -tunpl | grep 3306
+	killall nginx
+	需要有一个同步用户
+	在10.2上	mysql -uroot -p123456 -h192.168.10.1(没有授权的话会被拒绝)
+	? grant
+	grant all on *.* to user1@192.168.10.2 identified by "123456";
+	select user,host,password from mysql.user;
+	+-------+-----------------------+-------------------------------------------+
+	| user  | host                  | password                                  |
+	+-------+-----------------------+-------------------------------------------+
+	| root  | localhost             | *6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9 |
+	| root  | localhost.localdomain |                                           |
+	| root  | 127.0.0.1             |                                           |
+	| root  | ::1                   |                                           |
+	|       | localhost             |                                           |
+	|       | localhost.localdomain |                                           |
+	| user1 | 192.168.10.2          | *6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9 |
+	+-------+-----------------------+-------------------------------------------+
+	授权10.1的mysql服务器上的user1用户可以在10.2服务器上面登录，可以操作所有数据库的所有表
+	select database();
+mysql bin-log日志
+	开启mysql bin-log日志
+		vi /etc/my.cnf
+			[mysqld]
+			port=3306
+			socket=/var/lib/mysql/mysql.sock
+			log-slow-queries=mysql-slow.log
+			log-error=mysql.err
+			log=mysql.log
+			log-bin=mysl-bin	保留所有增删改的日志	/var/lib/mysql/mysql-bin-*
+查看bin-log日志
+	show variables like "%log_bin%";
+	+---------------------------------+-------+
+	| Variable_name                   | Value |
+	+---------------------------------+-------+
+	| log_bin                         | ON    |
+	| log_bin_trust_function_creators | OFF   |
+	| sql_log_bin                     | ON    |
+	+-------------- -------------------+-------+
+	查看 ls /var/lib/mysql/
+与bin-log有关的日志刷新
+	flush logs;
+	此时就会多一个最新的bin-log日志
+	show master status;
+		+------------------+----------+--------------+------------------+
+		| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |
+		+------------------+----------+--------------+------------------+
+		| mysql-bin.000001 |      107 |              |                  |
+		+------------------+----------+--------------+------------------+
+		insert into book values(101,'shuihuzhuan',2,6,7);
+		show master status;
+		+------------------+----------+--------------+------------------+
+		| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |
+		+------------------+----------+--------------+------------------+
+		| mysql-bin.000001 |      313 |              |                  |
+		+------------------+----------+--------------+------------------+
+	查看最后一个bin日志
+	reset master;
+	清空所有的bin-log日志
+	mysqlbinlog --no-defaults mysql-00001.bin
+	用mysqlbinlog mysql-00001.bin时报错，说是字符集有问题
+		/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+		/*!40019 SET @@session.max_insert_delayed_threads=0*/;
+		/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+		DELIMITER /*!*/;
+		# at 4
+		#190811  5:06:25 server id 1  end_log_pos 107 	Start: binlog v 4, server v 5.5.49-log created 190811  5:06:25 at startup
+		# Warning: this binlog is either in use or was not closed properly.
+		ROLLBACK/*!*/;
+		BINLOG '
+		kdpPXQ8BAAAAZwAAAGsAAAABAAQANS41LjQ5LWxvZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+		AAAAAAAAAAAAAAAAAACR2k9dEzgNAAgAEgAEBAQEEgAAVAAEGggAAAAICAgCAA==
+		'/*!*/;
+		# at 107
+		#190811  5:08:20 server id 1  end_log_pos 175 	Query	thread_id=3	exec_time=0	error_code=0
+		SET TIMESTAMP=1565514500/*!*/;
+		SET @@session.pseudo_thread_id=3/*!*/;
+		SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+		SET @@session.sql_mode=0/*!*/;
+		SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+		/*!\C utf8 *//*!*/;
+		SET @@session.character_set_client=33,@@session.collation_connection=33,@@session.collation_server=33/*!*/;
+		SET @@session.lc_time_names=0/*!*/;
+		SET @@session.collation_database=DEFAULT/*!*/;
+		BEGIN
+		/*!*/;
+		# at 175
+		#190811  5:08:20 server id 1  end_log_pos 286 	Query	thread_id=3	exec_time=0	error_code=0
+		use `myDB`/*!*/;
+		SET TIMESTAMP=1565514500/*!*/;
+		insert into book values(101,'shuihuzhuan',2,6,7)
+		/*!*/;
+		# at 286
+		#190811  5:08:20 server id 1  end_log_pos 313 	Xid = 34
+		COMMIT/*!*/;
+		DELIMITER ;
+		# End of log file
+		ROLLBACK /* added by mysqlbinlog */;
+		/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+		/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;
+
+		/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+		/*!40019 SET @@session.max_insert_delayed_threads=0*/;
+		/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+		DELIMITER /*!*/;
+		# at 4
+		#190811  5:22:21 server id 1  end_log_pos 107 	Start: binlog v 4, server v 5.5.49-log created 190811  5:22:21 at startup
+		# Warning: this binlog is either in use or was not closed properly.
+		ROLLBACK/*!*/;
+		BINLOG '
+		Td5PXQ8BAAAAZwAAAGsAAAABAAQANS41LjQ5LWxvZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+		AAAAAAAAAAAAAAAAAABN3k9dEzgNAAgAEgAEBAQEEgAAVAAEGggAAAAICAgCAA==
+		'/*!*/;
+		# at 107
+		#190811  5:23:01 server id 1  end_log_pos 175 	Query	thread_id=6	exec_time=0	error_code=0
+		SET TIMESTAMP=1565515381/*!*/;
+		SET @@session.pseudo_thread_id=6/*!*/;
+		SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+		SET @@session.sql_mode=0/*!*/;
+		SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+		/*!\C utf8 *//*!*/;
+		SET @@session.character_set_client=33,@@session.collation_connection=33,@@session.collation_server=33/*!*/;
+		SET @@session.lc_time_names=0/*!*/;
+		SET @@session.collation_database=DEFAULT/*!*/;
+		BEGIN
+		/*!*/;
+		# at 175
+		#190811  5:23:01 server id 1  end_log_pos 267 	Query	thread_id=6	exec_time=0	error_code=0
+		use `myDB`/*!*/;
+		SET TIMESTAMP=1565515381/*!*/;
+		delete from book where id>100
+		/*!*/;
+		# at 267
+		#190811  5:23:01 server id 1  end_log_pos 294 	Xid = 51
+		COMMIT/*!*/;
+		DELIMITER ;
+		# End of log file
+		ROLLBACK /* added by mysqlbinlog */;
+		/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TY
+
+恢复被delete了的数据
+	flush logs;
+	mysqlbinlog --no-defaults mysql-bin.000002 | mysql -uroot -p123456;
+mysql备份和bin-log日志
+	备份数据：
+		mysqldump -uroot -p123456 -test -F '/tmp/test.sql'
+		-F即flush logs，可以重新生成新的日志文件，当然包括log-bin日志
+		查看binlog日志用show master status
+
+
+
+
+
+
+
+
+
+
+
