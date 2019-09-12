@@ -1,0 +1,28 @@
+如果仅仅是查询数据，能否加锁？可以
+	会话1:select * from linelock where id=2;	for update
+	会话2:update linelock set name='x' where id=2;
+
+	会话1:select * from linelock where id=2 for update;
+	会话2:update linelock set name='xx' where id=2;
+	
+	研究学习时将自动提交先关闭，
+		set autocommit=0;
+		start transaction;
+		begin;
+		会话1:select * from linelock where id=2 for update;
+		会话2:update linelock set name='xxx' where id=2;	锁住了
+	通过for update对query语句进行加锁。
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+

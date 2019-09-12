@@ -1,0 +1,54 @@
+编译安装
+	$ tar -zxvf php-7.1.0.tar.gz
+	$ cd php-7.1.0
+	$ ./configure --prefix=/usr/local/php --enable-fpm
+	注意：默认情况下，make install命令会把执行文件和库文件安装到/usr/local/bin和/usr/local/lib目录。为了后续研究方便，我们使用
+--prefix将php7安装到/usr/local/php目录下，同时安装php-fpm。
+	执行make命令：
+	$ make && make install
+	$ls
+	bin etc include lib php sbin var
+	到此，完成了php-7.1.0的编译安装，生成的可执行文件php-fpm在sbin中，其他部分在bin目录下：
+	pear peardev pecl phar phar.phar php php-cgi php-config phpdbg phpize
+	其中php是cli模式下的php脚本执行程序。
+	PEAR(PHP Extension and Application Repository，PHP扩展与应用库)，是PHP官方开源类库，可以使用pear list列出所有已经安装的包。
+通过pear install安装需要的包。
+	PCEL是PHP的扩展库，可以通过PEAR的Package Manager的管理方式来下载和安装扩展代码。
+	以安装yaconf为例：
+	$ ./pecl install yaconf
+	...
+	php-config是输出PHP编译信息的辅助命令。
+	phpdbg是一个轻量级，具有丰富功能的调试平台。PHP5.4以上版本支持，比如可以使用它查看opcode：
+	$ ./phpdbg -p* t.php
+	phpdbg的其他功能可以通过phpdbg --help查看。
+	phpize命令用来动态安装扩展，如果在安装PHP时没有安装某个扩展，可以通过这个命令随时安装。
+	
+	php-fpm运行模式
+	$ vim /usr/local/php/etc/php-fpm.conf
+	//添加如下配置项
+	[www.local]
+	pm=static
+	pm.max_children=1
+	pm.start_servers=1
+	pm.min_spare_servers=1
+	pm.max_spare_servers=1
+	这段配置设定php-fpm的运行模式为static，最大进程数为1，启动进程数为1、最大和最小空余进程数为1。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,206 @@
+mysql备份和bin-log日志
+	备份数据
+	mysqldump -root -p123456 -l -F myDB > '/tmp/test.sql'				-l读锁(所有的人都不可以读，但是不可以写)
+	-F即flush logs，可以重新生成新的日志文件，当然包括log-bin日志
+	查看binlog日志用show master status
+	
+	reset master;
+	flush logs;
+	mysqldump -root -p123456 myDB < '/tmp/test.sql'	恢复数据库
+	mysqlbinlog --no-defaults mysql-bin.000002 | mysql -uroot -p123456;
+mysql恢复与bin-log日志
+	mysql -uroot -p123456 myDB -f < /tmp/test.sql
+	-v查看导入的详细信息
+	-f是当中间遇到错误时，可以skip过去，继续执行下面的语句
+	mysqlbinlog --no-defaults mysql-bin.000002 | mysql -uroot -p123456;
+	恢复binlog-file二进制日志文件
+完整的bin-log日志恢复
+	1.创建一个人表t1(id int)
+		show tables;
+	2.添加两行数据
+	3.备份现有数据
+		mysqldump -root -p123456 -l -F myDB > '/tmp/test.sql'	
+	4.在备份完成后又添加了三行数据
+	5.此时突然数据损坏或者认为删除
+	6.用已经备份的test.sql来恢复数据？
+		mysql -uroot -p123456 myDB -f < /tmp/test.sql
+	7.但是自从上次备份后添加的三条数据会丢失，怎么办？只能用bin-log来恢复
+		mysqlbinlog --no-defaults mysql-bin.000002|more
+		这个上添加6这个数据，所以用bin-log恢复到539即可
+	8.开始恢复
+		mysqlbinlog --no-defaults --stop-position='644' mysql-bin.000002 | mysql -uroot -p123456;
+	9.最后查看t1表
+	10.恢复完毕，mysqldump+binlog来恢复数据的完整过程
+	11.以下是mysqlbinlog后跟的主要参数：
+		--stop-position='100'
+		--start-position='50'		
+		--stop-date='2012-01-04 21:17:50'
+		--start-date='2012-01-04 19:10:10'
+mysql主从复制作用
+	mysql复制的优点主要包括一下3个方面
+		1.如果主服务器出现问题，可以快速切换到从服务器提供的服务
+		2.可以在从服务器上执行查询操作，降低主服务器的访问压力
+		3.可以在从服务器上执行备份以避免备份期间影响主服务器的服务
+		注意一般只有更新不频繁的数据或对实时性要求不高的数据可以通过从服务器查询，实时性要求高的数据仍然需要从主服务器获得
+主服务器配置
+	1.登录mysql数据库
+		mysql -uroot -p123456 myDB
+	2.给从服务器设置授权用户
+		grant all slave on *.* to user@192.168.10.2 identified by "pass";
+		或
+		grant replication slave on *.* to user@192.168.10.2 identified by "pass";
+		select user,host,password from mysql.user;
+	3.修改主服务器的配置文件my.cnf，开启binlog，并设置sever-id的值
+		log-bin=mysql-bin
+		server-id=1
+	4.在主服务器上设置读锁定有效，确保没有数据库操作，以便获得一个一致性的快照
+		flush tables with read lock;
+	5.查看主服务器上当前的二进制日志名和偏移量值
+		show master status;
+		+------------------+----------+--------------+------------------+
+		| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |
+		+------------------+----------+--------------+------------------+
+		| mysql-bin.000004 |    79613 |              |                  |
+		+------------------+----------+--------------+------------------+
+		mysql -uuser1 -p123456 -h192.168.10.1		注意要关闭防火墙
+	6.目前主数据库服务器已经停止了更新操作，生成主数据库的备份，备份的方式有两种
+		a.cp全部的数据
+		b.mysqldump备份数据方法
+			如果主数据库的服务可以停止，那么直接cp数据文件应该是最快的生成快照的方法。
+				tar -cvf data.tar data
+	7.主数据库备份完毕后，主数据库可以恢复写操作，剩下的操作只需要在从服务器上执行
+		unlock tables;
+	8.把主数据库的一致性备份恢复到从数据库上，把以上的压缩包解压后放到相应的目录即可
+		reset master;
+		show master status;
+		mysqldump -root -p123456 -l -F myDB > '/tmp/test.sql'	
+		scp /tmp/test.sql 192.168.10.2:/root/
+		show grants for user1@192.168.10.2
+mysql从服务器配置
+	reset master;
+	show master status;
+	mysql -uroot -p123456 myDB -f < /root/test.sql
+	1.修改从数据库的server-id，注意server-id的值必须是唯一的，不能喝主数据库的配置相同，如果有多个从服务器，每个从数据库
+		必须有自己唯一的server-id值。
+		show slave status;
+	连接主服务器
+			在从服务器上的配置文件中
+				sever-id=2
+				master-host=192.168.10.1
+				master-user=user
+				master-password=pass
+				master-port=3306
+				log-bin=mysql-bin
+								mysql>slave stop;
+								mysql>change master to master_host='192.168.1.2',
+								->master_user='repl_user',
+								->master_password='123456',
+								->master_log_file='mysql-bin.000013',
+								->master_log_pos=7863951; 
+								注意mysql版本
+			重新启动mysql
+				service mysql restart
+	查看相应的主从复制进程列表有两个
+		show processlist;
+		+----+-------------+-----------+----------+---------+------+-----------------------------------------------------------------------------+------------------+
+		| Id | User        | Host      | db       | Command | Time | State                                                                       | Info             |
+		+----+-------------+-----------+----------+---------+------+-----------------------------------------------------------------------------+------------------+
+		|  1 | root        | localhost | NULL     | Sleep   |  647 |                                                                             | NULL             |
+		|  2 | root        | localhost | testdata | Sleep   |  252 |                                                                             | NULL             |
+		|  3 | system user |           | NULL     | Connect |  582 | Waiting for master to send event                                            | NULL             |
+		|  4 | system user |           | NULL     | Connect |  232 | Slave has read all relay log; waiting for the slave I/O thread to update it | NULL             |
+		|  5 | root        | localhost | testdata | Query   |    0 | NULL                                                                        | show processlist |
+		+----+-------------+-----------+----------+---------+------+-----------------------------------------------------------------------------+------------------+
+		如出现state waiting for master to send event
+		连接主服务器成功，而且成功获取bin-log
+			state：has real all ready log，waiting for the slave i/o thread to update it
+			成功执行bin-log，正在等待着去再次连接主数据库并更新获取bin-log日志
+				show slave status \G
+				*************************** 1. row ***************************
+							   Slave_IO_State: Waiting for master to send event
+								  Master_Host: 192.168.10.1
+								  Master_User: user1
+								  Master_Port: 3306
+								Connect_Retry: 60
+							  Master_Log_File: mysql-bin.000006
+						  Read_Master_Log_Pos: 668
+							   Relay_Log_File: localhost-relay-bin.000002
+								Relay_Log_Pos: 657
+						Relay_Master_Log_File: mysql-bin.000006
+							 Slave_IO_Running: Yes
+							Slave_SQL_Running: Yes
+							  Replicate_Do_DB: testdata
+						  Replicate_Ignore_DB: 
+						   Replicate_Do_Table: 
+					   Replicate_Ignore_Table: 
+					  Replicate_Wild_Do_Table: 
+				  Replicate_Wild_Ignore_Table: 
+								   Last_Errno: 0
+								   Last_Error: 
+								 Skip_Counter: 0
+						  Exec_Master_Log_Pos: 668
+							  Relay_Log_Space: 817
+							  Until_Condition: None
+							   Until_Log_File: 
+								Until_Log_Pos: 0
+						   Master_SSL_Allowed: No
+						   Master_SSL_CA_File: 
+						   Master_SSL_CA_Path: 
+							  Master_SSL_Cert: 
+							Master_SSL_Cipher: 
+							   Master_SSL_Key: 
+						Seconds_Behind_Master: 0
+				Master_SSL_Verify_Server_Cert: No
+								Last_IO_Errno: 0
+								Last_IO_Error: 
+							   Last_SQL_Errno: 0
+							   Last_SQL_Error: 
+				  Replicate_Ignore_Server_Ids: 
+							 Master_Server_Id: 1
+			如出现
+				slave_io_running yes
+					此进程负责从主服务器上读取binlog日志，并写入从服务器的中继日志中
+				slave_sql_running yes
+					此进程负责读取并执行中继日志中的binlog日志
+				注以上两个都为yes则表明成功，只要其中一个进程的状态是no，则表示复制进程停止，错误原因可以从
+					"last error"字段中的值看到。
+	从数据库常用命令
+		start slave
+			启动复制进程
+		stop slave
+			停止复制进程
+		show slave status
+			查看从数据库状态
+		show master log
+			查看主数据库bin-log日志
+		change master to
+			动态改变到主服务器的配置
+		show processlist
+			查看数据库运行进程
+mysql常见错误
+	从数据库无法同步
+		show slave status显示slave_sql_running为no，seconds_behind_master为null
+			原因：
+				程序可能在slave上进行了写操作
+				也可能是slave机器重启后，事务回滚造成的
+			解决：
+				方法一
+					slave stop
+					set global sql_slave_skip_counter=1
+					slave start
+				方法二
+					slave库，slave stop 停止掉slave服务
+					master库，show master status，得到主数据库上当前的二进制日志名和偏移量
+					查看状态，然后到slave服务器上执行手动同步
+						change master to
+						master-host=192.168.10.1
+						master-user=user
+						master-password=pass
+						master-port=3306
+						master-log-file="mysql-bin.00000003"
+						master-log-pos=98
+						启动slave 服务
+						通过show slave status查看slave_sql_running为yes，seconds_benhind_master为0即为正常
+		
+		
+	

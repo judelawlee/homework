@@ -1,0 +1,116 @@
+附加权限、特殊权限、acl控制
+附加权限管理
+	————附加权限总述
+特殊权限的作用
+	特殊权限
+		-叠加与权限位的u、g、o分组之上
+		-用来传递程序执行身份、限制目录写入权限
+特殊权限类别
+	类别		字符表示		数字表示		叠加位置
+	set uid		s				4				user的x位
+	set gid		s				2				group的x位
+	sticky bit	1				1				other的x位
+		ls -ld /tmp/ /usr/bin/passwd		可以改自己的密码，不可以改其他用户的密码(普通用户)
+acl权限的作用
+	access control list
+		-ext系列文件系统支持
+		-可以为个别用户、组设置独立的rwx权限
+		-为目录设置新子档案的默认rwx权限
+			tune2fs -l /dev/sda2 grep acl
+			df -hT
+附加权限管理
+	————suid权限
+set uid概述
+	suid权限
+		-占用属主(user)的x位
+		-显示为s或S，取决于属主是否有x权限
+		-仅对于可执行的程序有意义
+		-当其他用户执行带suid标记的程序时，具有此程序属主的身份和权限
+suid权限测试
+	建立mymd1命令，并添加suid权限
+		-普通用户能在它的/目录下创建子目录
+			cp /bin/mkdir /bin/mymd1
+			chmod u+s /bin/mymd1		chmod 4755 /bin/mymd1
+			ls -l /bin/mymd1
+附加权限管理
+	————sgid权限	
+set gid概述
+	suid权限
+		-占用属组(group)的x位
+		-显示为s或S，取决于属组是否有x权限
+		-对可执行的程序/目录有效
+		-当其他用户执行带sgid标记的程序时，具有此程序属组的身份和权限
+		-当一个足有sgid权限的目录下，新建文档自动继承此目录的属组身份
+sgid权限id权限测试
+	当未设置sgid权限时，对应新建文档的属组
+		-谁创建，谁拥有
+			groupadd tarena
+			chown :tarena /nsdpublic/
+			mkdir /nsdpublic/
+			mkdir /nsdpublic/nsd1
+			ls -ld /nsdpublic/nsd1/
+sgid权限权限测试(续1)
+	当设置了sgid权限后，对于新建文档的属组
+		-上层目录归谁，就归谁
+			chmod g+s /nsdpublic/
+			ls -ld /nsdpublic/
+			mkdir /nsdpublic/nsd2
+			ls -ld /nsdpublic/nsd2/	
+sticky bit概述
+	粘滞位，sticky bit权限
+		-占用其他人(other)的x位
+		-显示为t或T，取决于其他人是否有x权限
+		-适用于目录，用来限制其他用户滥用写入权
+		-当其他用户执行带sgid标记的程序时，具有此程序属组的身份和权限
+		-在设置了粘滞位的文件夹下，即使用户有写入权限，也不能删除或更爱其他用户文档		
+sticky权限id权限测试
+将目录/stdir的权限设为777
+		-未设粘滞位时，普通用户可以任意删除文档
+		-设了粘滞位后，普通用户无法删除其他人文档
+			mkdir -m 777 /stdir
+			chmod o+t /stdir
+			touch /stdir/root.file
+			rm root.file
+附加权限管理
+	————acl访问控制
+查看acl权限
+	getfacl命令
+		-指定文件或目录路径作为参数
+		-大部分文档默认不会设置任何额外的acl策略
+			getfacl /stdir 
+定义acl控制策略
+	setacl命令
+		-格式：
+			setfacl [选项] u:用户名:权限 文件...
+			setfacl [选项] g:组名:权限 文件...
+	常用命令选项
+		-m:定义一条acl策略
+		-x:清除指定的acl策略
+		-b:清除所有已设置的acl策略
+		-R:递归设置acl策略
+		-d:为目录设置默认权限(子文档自动继承)
+定义acl控制策略(续1)	
+	为/root设置acl策略
+		-使用户stu01具有rx权限
+			setfacl -m user:stu01:r-x /root
+			ls -ld /root
+			getfacl /root
+定义acl控制策略(续2)	
+	清除所有acl控制策略
+		-保留原有的rwx访问权限
+			setfacl -b /root
+			setfacl -x u:xuduo3 /root
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+

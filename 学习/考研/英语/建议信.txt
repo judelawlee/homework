@@ -1,0 +1,21 @@
+思路分析的第一步是分析题目。就本题而言，主题分别是学生和校长，因此要注意使用礼貌用语和正式用语；主题内容要包括建议的具体内容。
+第二步是头脑风暴。将提出的具体建议列出来，如增加体育课课时、丰富体育课课程、组织一些课外体育活动等。
+第三步是组织语言。这封信是写给校长的，要注意语言表达，首先要表示荣幸，之后再提出建议。
+写作的逻辑顺序一般为开门见山说出目的，之后说出内容，最后希望自己的建议被采纳。
+
+Honorable President,
+	I am privileged to write to you about how to improve students' physical condition on our campus.My proposals are as follows.
+	Firstly,since students are not getting enough workouts,I think it is essential that out school arrange adequate PE lessons
+in per week courses,giving us more opportunities to strengthen our body.Secondly,I propose that we should add a variety of PE
+courses,such as swimming,bowling,and yoga,which will stimulate mass participation in sports.Finally,I hope that our university
+can regularly organize a large number of extracurricular activities.
+	I hope the above suggestions could be token and the health conditions of our college students could be improved considerably.
+																											Yours sincerely,
+																													Li Ming
+
+	得分亮点
+	be privileged to do	很荣幸做...
+	it is essential that	(+虚拟语气)有必要做...
+	I propose that	我建议
+	extracurricular activities	课外活动
+	considerably	ad.向当地，非常地

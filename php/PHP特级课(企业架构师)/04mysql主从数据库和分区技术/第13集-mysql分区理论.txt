@@ -1,0 +1,113 @@
+大数据存储
+	当mysql中一个表的总记录数超过1000万，会出现性能的大幅度下降吗？答案是肯定的。但性能的下降的比率由系统的架构、应用程序、
+	数据库索引、服务器硬件等多种因素而定。数据库多达上亿的数据量，分表之后的单个表页已经突破千万，那么单个表的更新等均影响
+	着系统的运行效率。甚至是一条简单的sql都可能压垮整个数据库，如整个表对某个字段的排序操作等
+解决方案
+	目前，针对海量数据的优化主要有2中方法：大表拆小表的方式、sql语句的优化
+	sql语句的优化：可以通过增加索引等来调整，但是数据量的增大将会导致索引的维护代理增大
+大表拆小表
+	垂直分表
+	水平分表
+		水平分表技术将一个表拆成多个表，比较常见的方式是将表中的记录按照某种hash算法进行拆分，简单的拆分方法如取模方式。同样，
+		这种分区方法也必须对前端的应用程序中的sql进行修改方可使用。而且对于一个sql，它可能会修改两个表，那么你必须得写成2个
+		sql语句从而可以完成一个逻辑的事务，使得程序的判断逻辑越来越复杂，这样也会导致程序的维护代价高，也就失去了采用数据库的
+		优势。因此，分区技术可以有力地避免如上的弊端，成为解决海量数据存储的有力方法。
+mysql分区介绍
+	mysql的分区技术不同于之前的分表技术，它与水平分表有点类似，但是它是在逻辑层进行的水平分表，对与应用程序而言，它还是一张表，
+	mysql5.1有4中分区类型：
+		range分区：基于属于一个给定的连续区间的列值，把多行分配给分区
+		list分区：类似于按range分区，区别在于list分区时基于列值匹配一个离散值集合中的某个值来进行选择
+		hash分区：基于用户定义的表达式的返回值来进行选择的分区，该表达式使用将要插入到表中的这些行的列值进行计算，这个函数可以
+			包含mysql中的有效的、产生非负整数值的任何表达式
+		key分区：类似于按hash分区，区别在于key分区只支持计算一列或多列，且mysql服务器提供其自身的hash函数
+range分区
+	例1：假定你创建了一个表如下，该表保存了20加音像店的职员记录，这20加音像店的编号从1到20.如果你想将其分成4个小分区，
+		那么你可以采用range分区，创建的数据库表如下：
+			create table emp(
+				id int not null,
+				name varchar(20),
+				separated date not null default '9999-12-31',
+				store_id int not null
+			)
+			partitionby range(store_id)(
+				partition p0 values less than(6),
+				partition p1 values less than(11),
+				partition p2 values less than(16),
+				partition p3 values less than(21),
+			);
+	例2：假定你创建了一张表如下，该表保存了有20加音像店的职员记录，这20家音像店的编号从1到20.你想把不同时期离职的员进行分别
+		存储，那么你可以将日期字段separated(即离职时间)作为一个key，那么创建的sql如下
+			create table emp(
+				id int not null,
+				name varchar(20), 
+				separated date not null default '9999-12-31',
+				store_id int not null
+			)
+			partitionby range(YEAR(separated))(
+				partition p0 values less than(1991),
+				partition p1 values less than(1996),
+				partition p2 values less than(2001),
+				partition p3 values less than maxvalue,
+			);
+		这作样你就可以对一个日期类型的字段用mysql的日期函数year()转换为一个整数类型，从而可以作为range分区的key。这个时候
+		你可以看到，分区后的物理文件是相对独立的
+list分区
+	list分区与range分区有点类似，加个例子如下：
+	例3：假定你创建了一个如下的一个表，该表保存了有20加音像店的职员记录，这20加音像店的编号从1到20。而这20个音像店，分布在
+		4个有经销权的地区，如下标所示：
+					地区			商店id号
+					北区			3,,5,6,9,17
+					东区			1,2,10,11,19,20
+					西区			4,12,13,14,18
+					中区			7,8,15,16
+		那么你可以采用如下的list分区语句创建数据表：
+			create table emp(
+				id int not null,
+				name varchar(20), 
+				separated date not null default '9999-12-31',
+				store_id int not null
+			)
+			partitionby list(store_id)(
+				partition pNorth values in(3,,5,6,9,17),
+				partition pEast values n(1,2,10,11,19,20),
+				partition pWest values n(4,12,13,14,18),
+				partition pCentral n(7,8,15,16),
+			);
+		同样，它在物理文件上也会表识不同分区
+hash分区
+	hash分区主要用来确保数据在预先确定数目的分区中平均分布。它可以基于用户定义的表达式的返回值来进行选择的分区，该表达式使用
+	将要插入到表中的这些行的列值进行计算。
+	例4：假定你创建了一个如下的一个表，该表记录了20家音像店的职员记录，这20家音像店的编号从一到20。你想把不同时期加入的员进行
+		分别存储，那么你可以将日期字段hired(即入职时间)作为一个key，那么创建的sql如下：
+			create table emp(
+				id int not null,
+				name varchar(20), 
+				hired date not null default '1970-01-01',
+				separated date not null default '9999-12-31',
+				store_id int not null
+			)
+			partitionby hash(year(hired))(
+				partitions 4
+			);
+key分区 
+	与hash分区类似，但它的key可以不是整数类型，如字符串等类型的字段。mysql簇(cluster)使用函数md5()来实现key分区：对于使用其他
+	存储引擎的表，服务器使用其自己内部的hash函数，这些函数是基于与password()一样的运算规则。
+不同分区技术的对比
+	如上分别列出了不同的分区技术，加下来进行对比，如下表所示：
+		分区类型	优点											缺点							共性
+		range		适合与日期类型，支持复合分区					有限的分区						一般只针对某一列
+		list		适合有固定取值的列，支持复合分区				有限的分区插入记录在这一列的	一般只针对某一列
+																	值不在list中，则数据丢失
+		hash		线性hash使得增加、删除和合并分区更快捷			线性hash的数据分布不均匀，		一般只针对某一列
+																	而一般hash的数据分布较均匀
+		key			列可以作为字符串等其他非int类型					效率较之前的低，因为函数为		一般只针对某一列
+																	复杂的函数(md5或sha函数)
+	show plugin;
+	engine myisam
+	
+	
+	
+	
+	
+	
+	

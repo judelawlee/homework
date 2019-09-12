@@ -1,0 +1,121 @@
+create index in_id on t2(id);
+desc t2;
+insert into t2(id) values(1);
+insert into t2(id) values(1),(2),(3),(4),(5),(6);
+insert into t2(id) values select * from t2;
+索引比数据还大
+myisam速度还是比较快的
+free -m
+	创建存储过程
+		create table t3(id int);
+		\d //	改变语句定界符
+		create procedure p3()
+		begin
+		set @i=1;
+		while @i<10000 do
+		insert into t3 values(@i);
+		set @i=@i+1;
+		end while;
+		end//
+		查看存储过程
+		show procedure status;
+		call p3();
+		? procedure;
+mysql分区实例
+	创建分区表，按日期的年份拆分
+		create table part_tab(c1 int default null,c2 varchar(30) default null,c3 date default null) engine=myisam
+		partition by range(year(c3))(
+			partition p0 values less than (1995),
+			partition p1 values less than (1996),
+			partition p2 values less than (1997),
+			partition p3 values less than (1998),
+			partition p4 values less than (1999),
+			partition p5 values less than (2000),
+			partition p6 values less than (2001),
+			partition p7 values less than (2002),
+			partition p8 values less than (2003),
+			partition p9 values less than (2004),
+			partition p10 values less than (2010),
+			partition p11 values less than MAXVALUE,
+		);
+		注意最后一行，考虑到可能的最大值
+		show create table part_tab;
+未分区表
+	创建未分区表
+		create table no_part_tab(c1 int default null,c2 varchar(30) default null,c3 date default null) engine=myisam;
+创建load_part_tab存储
+	通过存储过程灌入800万条测试数据
+		set mysql_mode='';	//如果创建存储过程失败，则需要设置此变量
+		delimiter //		//设置语句终结符为//，因为存储过程用;结束
+		create procedure load_part_tab()
+		begin
+		declare v int default 0;
+		while v<8000000
+		do
+			insert into part_tab values(v,'test partition',adddate('1995-01-01',(rand(v)*36520) mod 3652));
+			set v=v+1;
+		end while;
+		end
+		//
+		delimiter ;
+		show procedure status;
+	执行存储过程
+		call load_part_tab;
+		watch -n1 ls -lh part*D
+		top	查看cpu使用
+	insert into no_part_tab select * from part_tab;
+	测试sql性能
+		select count(*) from part_tab where c3>date'1995-01-01' and c3<date'1995-12-01';
+		select count(*) from no_part_tab where c3>date'1995-01-01' and c3<date'1995-12-01';
+		结果表明分区表比未分区表的执行时间少90%
+		desc select count(*) from part_tab where c3>date'1995-01-01' and c3<date'1995-12-01';
+		desc select count(*) from no_part_tab where c3>date'1995-01-01' and c3<date'1995-12-01';	
+		explain语句显示了sql查询要处理的记录数目
+	创建索引后
+		create index idx_of_c3 on no_part_tab;
+		create index idx_of_c3 on part_tab;
+		desc select count(*) from part_tab where c3>date'1995-01-01' and c3<date'1995-12-01';
+		desc select count(*) from no_part_tab where c3>date'1995-01-01' and c3<date'1995-12-01';		
+	增加未索引字段查询
+		desc select count(*) from part_tab where c3>date'1995-01-01' and c3<date'1995-12-01' and c2='hello';
+		desc select count(*) from no_part_tab where c3>date'1995-01-01' and c3<date'1995-12-01' and c2='hello';
+	innodb表数据结构
+		对应innodb的数据结构，首先要解决两个概念性的问题，共享表空间以及独占表空间
+		数目是共享表空间和独占表空间
+		共享表空间以及独占表空间都是针对数据的存储方式而言的。
+		共享表空间：某一个数据库的所有的表数据，索引文件全部放在一个文件中，默认这个共享表空间的文件路径在data目录下。默认的
+			文件名为ibddata1初始化为10M。
+		独占表空间：每一个表都将会生成以独立的文件方式来进行存储，每一个表都有一个.frm表描述文件，还有一个.ibd文件。其中这个
+			文件包含了单独一个表的数据内容以及索引内容，默认情况下它的存储位置也是在表的位置之中。
+	修改独占表空间
+		innodb_data_home_dir=''
+		innodb_log_group_home_dir=''
+		innodb_data_file_path=''
+		innodb_file_per_table=1
+		参数说明：
+			这个设置配置一个可扩展大小的尺寸为10M的单独文件，名称为ibddata1，没有给出文件的位置，所以默认的是在mysql的数据
+			目录内。
+			innodb_data_home_dir	代表为数据库文件所存放的目录
+			innodb_log_group_home_dir	为日志存放目录
+			innodb_file_per_table	是否使用共享以及独占表空间
+			以上几个参数必须再一起加入
+			创建innodb的表只有一个表结构文件，表数据在ibddata1里面。
+			pstree | grep mysqld
+			.ibd存储的是innodb存储引擎的表的索引和数据文件
+			分区在innodb引擎中只有在独立表空间中才能成功。
+			create table t7(id int)engine=innodb
+			partition by hash(id)
+			partitions 5;
+	查看variables参数
+		show variables like '%per_table%';
+	innodb表空间与分区
+		只有把innodb设置成独立表空间后，才能创建成功innodb表引擎的表分区
+	本章总结
+		1.mysql用户授权
+		2.mysql bin-log日志
+		3.mysql主从复制
+		4.mysql主从测试
+		5.mysql分区技术
+		6.mysql分区测试
+		
+		

@@ -1,0 +1,236 @@
+21.3 使用WebSocket
+	WebSocket连接服务器和客户端，这个连接是一个实时的长连接，服务器端一旦与客户端建立了双向连接，就可以将数据推送到Socket中，客户
+端主要有一个Socket绑定的地址和端口与服务器建立联系，就可以接受推送来的信息。
+21.3.1 在客户端定义Socket对象
+	在JavaScript脚本中，可以通过下面步骤实现与服务器端建立长时连接。
+	[操作步骤]
+	第1步，创建连接。建立一个WebSocket对象，代码如下。
+	var host="http://www.websocket.org/";
+	var socket=new WebSocket(host);
+	注意：
+	WebSocket()构造函数参数为URL，必须以"ws"或"wss"(加密通信时)字符开头，后面字符串可以使用HTTP地址。改地址没有使用HTTP协议写法，
+	因为它的属性为WebSocket URL。URL必须由4个部分组成，分别是通信标记(ws)、主机名称(host)，端口号(port)和WebSocket Server。
+	本例使用http://www.websocket.org/网站提供的socket服务端，协议地址为：ws://echo.websocket.org/。这样方便初学者根据需要架设服务
+器测试环境，以及编写服务器脚本。
+	第2步，发送数据。当WebSocket对象与服务器建立连接后，使用如下代码发送数据。
+	socket.send(dataInfo);
+	注意：
+	socket为新创建的WebSocket对象，send()方法中的dataInfo参数为字符类型，只能使用文本数据或将JSON对象转换成文本内容的数据格式。
+	第3步，接收数据。通过message事件接收服务器传过来的数据，代码如下。
+	socket.onmessage=function(event){
+		//弹出收到的信息
+		alert(event.data);
+		//其他代码
+	}
+	其中，通过回调函数中event对象的data属性来获取服务器端发送的数据内容，该内容可以是一个字符串或者JSON对象。
+	第4步，显示状态。通过WebSocket对象的readyState属性记录连接过程中的状态值。readyState属性是一个连接的状态指标，用于获取
+	WebSocket对象在连接、打开和关闭时的状态。该状态标志共有4个属性值，简单说明如下表所示。
+							readyState
+			属性值			属性常量			说明
+			0				CONNECTING			连接尚未建立
+			1				OPEN				WebSocket的连接已经建立
+			2				CLOSING				连接正在关闭
+			3				CLOSED				连接已关闭或不可用
+	提示：
+	WebSocket对象在连接过程中，通过侦测readyState状态标志的变化，可以获取服务器端与客户端连接的状态，并将连接状态以状态码形式返
+	回给客户端。
+	第5步，通过open事件监听socket的打开，用法如下所示。
+	socket.onopen=function(event){
+		//开始通信时处理
+	}	
+	第6步，通过close事件监听socket的关闭，用法如下所示。
+	socket.onclose=function(event){
+		//通信结束时处理
+	}
+	第7步，调用close()方法可以关闭socket，切断通信连接，如果如下所示。
+	socket.close();
+	在浏览器中预览。
+21.3.2 设计简单的"呼-应"通信
+	本节通过一个简单的示例演示如何使用WebSockets让客户端与服务器端握手连接，然后进行简单的呼叫和应答通信。
+	[操作步骤]
+	第1步，新建客户端页面，保存为client.html。
+	第2步，在页面中设计一个简单的交互表单。其中<textarea id="data">用于接收用户输入，单击<button id="send">按钮，可以把用户输入
+的信息传递给服务器，服务器接收到信息之后，响应信息并显示在<div id="message">容器中。
+	<div id="action">
+		<textarea id="data"></textarea>
+		<button id="send">发送信息</button>
+	</div>
+	<div id="message"> </div>	
+	第3步，设计JavaScript脚本，建立与服务器端的连接，并通过open、message、error事件处理函数跟踪连接状态。
+	<script type="text/javascript">
+	var message = document.getElementById('message');
+	var socket = new WebSocket('ws://127.0.0.1:8008');
+	socket.onopen = function(event) {
+		message.innerHTML = '<p>连接成功！</p>';
+	}
+	socket.onmessage = function(event) {
+		message.innerHTML =  "<p>响应信息："+ event.data  +"</p>";
+	}
+	socket.onerror = function() {
+		message.innerHTML = '<p>连接失败！</p>';
+	}
+	</script>
+	第4步，获取用户输入的信息，并把它发送给服务器。
+	var send = document.getElementById('send');
+	send.addEventListener('click', function() {   //设计单击按钮提交信息
+		var content = document.getElementById('data').value;
+		if(content.length <= 0){                     //验证信息
+			alert('消息不能为空！');
+			return false;
+		}
+		socket.send(content);                          //发送信息
+	});	
+	第5步，服务器端应用程序开发。新建PHP文件，保存为server.php，与client.html同置于PHP站点根目录下。
+	第6步，为了方便操作，定义WebSocket类，结构代码如下。
+	<?php
+	//定义WebSocket类
+	class WebSocket {
+		private $socket;//socket的连接池，即client连接进来的socket标志
+		private $accept;//不同状态的 socket 管理
+		private $isHand = array();// 判断是否握手
+		// 在构造函数中创建socket连接
+		public function __construct($host, $port, $max) { }
+		// 对创建的socket循环进行监听，处理数据
+		public function start() { }
+		// 首次与客户端握手
+		public function dohandshake($sock, $data, $key) {  }
+		// 关闭一个客户端连接
+		public function close($sock) {  }
+		// 解码过程
+		public function decode($buffer) {  }
+		// 编码过程
+		public function encode($buffer) {  }
+	}
+	?>
+	第7步，在构造函数中创建socket连接。
+	public function __construct($host, $port, $max) {
+		//创建服务端的socket套接流,net协议为IPv4，protocol协议为TCP
+		$this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, TRUE);
+		//绑定接收的套接流主机和端口,与客户端相对应
+		socket_bind($this->socket, $host, $port);
+		//监听套接流
+		socket_listen($this->socket, $max);
+	}	
+	第8步，监听并接收数据。
+		public function start() {
+			while(true) {//死循环，让服务器无限获取客户端传过来的信息
+				$cycle = $this->accept;
+				$cycle[] = $this->socket;
+				socket_select($cycle, $write, $except, null); //这个函数是同时接受多个连接
+				foreach($cycle as $sock) {
+					if($sock === $this->socket) {//如果有新的client连接进来
+						$client = socket_accept($this->socket); //接收客户端传过来的信息
+						$this->accept[] = $client; //将新连接进来的socket存进连接池
+						$key = array_keys($this->accept); //返回包含数组中所有键名的新数组
+						$key = end($key); //输出数组中最后一个元素的值
+						$this->isHand[$key] = false; //标志该socket资源没有完成握手
+					} else {
+						  // 读取该socket的信息，
+						  // 注意：第二个参数是引用传参，即接收数据；
+						  // 第三个参数是接收数据的长度
+					   $length = socket_recv($sock, $buffer, 204800, 0);
+						  //根据socket在accept池里面查找相应的健ID
+					   $key = array_search($sock, $this->accept);
+						  //如果接收的信息长度小于7，则该client的socket为断开连接
+						if($length < 7) {
+							$this->close($sock); //给该client的socket进行断开操作
+							continue;
+						}
+						if(!$this->isHand[$key]) {//判断该socket是否已经握手
+							//如果没有握手，则进行握手处理
+							$this->dohandshake($sock, $buffer, $key);
+						} else {//向该client发送信息，对接受到的信息进行uncode处理
+							// 先解码，再编码
+							$data = $this->decode($buffer);
+							$data = $this->encode($data);
+							// 判断断开连接（断开连接时数据长度小于10）
+							// 如果不为空，则进行消息推送操作
+							if(strlen($data) > 0) {
+								foreach($this->accept as $client) {
+								//向socket_accept套接流写入信息，也就是反馈信息给socket_bind()所绑定的主机客户端，socket_write的作用是向socket_create的套接流写入信息，或者向socket_accept的套接流写入信息
+									socket_write($client, $data, strlen($data));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	第9步，定义dohandshake()函数，建立与客户端的第一次握手连接。
+		// 首次与客户端握手
+		public function dohandshake($sock, $data, $key) {
+			//截取Sec-WebSocket-Key的值并加密，其中$key后面的一部分258EAFA5-E914-47DA-95CA-C5AB0DC85B11字符串应该是固定的
+			if (preg_match("/Sec-WebSocket-Key: (.*)\r\n/", $data, $match)) {
+				$response = base64_encode(sha1($match[1] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true));
+				$upgrade  = "HTTP/1.1 101 Switching Protocol\r\n" .
+						"Upgrade: websocket\r\n" .
+						"Connection: Upgrade\r\n" .
+						"Sec-WebSocket-Accept: " . $response . "\r\n\r\n";
+				socket_write($sock, $upgrade, strlen($upgrade));
+				$this->isHand[$key] = true;
+			}
+		}
+	关于解码和编码函数，就不再详细说明，读者可以参考本节示例源代码。
+	// 解码过程
+	public function decode($buffer) {  
+        $len = $masks = $data = $decoded = null;  
+        $len = ord($buffer[1]) & 127;  
+        if ($len === 126) {  
+            $masks = substr($buffer, 4, 4);  
+            $data = substr($buffer, 8);  
+        }   
+        else if ($len === 127) {  
+            $masks = substr($buffer, 10, 4);  
+            $data = substr($buffer, 14);  
+        }   
+        else {  
+            $masks = substr($buffer, 2, 4);  
+            $data = substr($buffer, 6);  
+        }  
+        for ($index = 0; $index < strlen($data); $index++) {  
+            $decoded .= $data[$index] ^ $masks[$index % 4];  
+        }  
+        return $decoded;  
+    }  
+	// 编码过程
+	public function encode($buffer) {
+        $length = strlen($buffer);  
+        if($length <= 125) {  
+            return "\x81".chr($length).$buffer;  
+        } else if($length <= 65535) {  
+            return "\x81".chr(126).pack("n", $length).$buffer;  
+        } else {  
+            return "\x81".char(127).pack("xxxxN", $length).$buffer;  
+        }  
+    } 
+	// 关闭一个客户端连接
+	public function close($sock) {  
+        $key = array_search($sock, $this->accept);  
+        socket_close($sock);  
+        unset($this->accept[$key]);  
+        unset($this->hands[$key]);  
+    }	
+	第10步，实例化WebSocket类型，并调用start()方法开通WebSocket服务。
+	//127.0.0.1是在本地主机测试，如果有多台电脑，可以写IP地址
+	$webSocket = new WebSocket('127.0.0.1', 8008, 10000);
+	$webSocket->start();
+	第11步，在浏览器中先运行server.php，启动WebSocket服务器，此时页面没有任何信息，浏览器一致等待客户端页面的连接请求，如图21.6所示。
+	第12步，在浏览器中先运行client.html，可以看到客户端与服务器端握手成功，如图21.7所示。	
+	第13步，在client.html页面中向服务器发送一条信息，则服务器会通过WebSocket通道返回一条响应信息，如图21.8所示。
+	[提示]
+	直接在浏览器中运行WebSocket服务器，PHP的配置参数（php.ini）有个时间限制，如下所示，也可以通过
+	new WebSocket('127.0.0.1', 8008, 10000);中第3个参数控制轮询时长，超出这个时限，就会显示如图21.9所示提示错误。	
+	[拓展]
+	用户也可以通过命令行运行WebSocket服务，实现长连接。具体操作步骤如下：
+	第1步，在“运行”对话框中，启动命令行工具，如图21.10所示。
+	第2步，在命令行中输入：php  E:\www\server.php，然后回车运行WebSocket服务器应用程序即可，如图21.11所示。
+	第3步，只要不关闭命令行窗口，用户可以随时在客户端使用WebSocket与服务器端进行通信，或者服务器主动向用户推送信息。	
+	
+	
+	
+	
+	
+	
+	
+	
