@@ -12,20 +12,24 @@
 	insert into book values(2,'c',2,1,2);
 	insert into book values(1,'php',3,2,1);
 	insert into book values(1,'js',4,2,3);
+	
 	查询authorid=1且cateid为2或3的id
 	select id from book where cateid in(1,2) and authorid=1;
+	
 	explain select id from book where cateid in(1,2) and authorid=1;
 	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
 	| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra       |
 	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
 	|  1 | SIMPLE      | book  | ALL  | NULL          | NULL | NULL    | NULL |    5 | Using where |
 	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
+	
 	explain select id from book where cateid in(2,3) and authorid=1 order by cateid desc;
 	+----+-------------+-------+------+---------------+------+---------+------+------+-----------------------------+
 	| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                       |
 	+----+-------------+-------+------+---------------+------+---------+------+------+-----------------------------+
 	|  1 | SIMPLE      | book  | ALL  | NULL          | NULL | NULL    | NULL |    5 | Using where; Using filesort |
 	+----+-------------+-------+------+---------------+------+---------+------+------+-----------------------------+
+	
 	优化：加索引
 	alter table book add index idx_ica(id,cateid,authorid);
 	explain select id from book where cateid in(2,3) and authorid=1 order by cateid desc;
@@ -34,6 +38,9 @@
 	+----+-------------+-------+-------+---------------+---------+---------+------+------+------------------------------------------+
 	|  1 | SIMPLE      | book  | index | NULL          | idx_ica | 12      | NULL |    5 | Using where; Using index; Using filesort |
 	+----+-------------+-------+-------+---------------+---------+---------+------+------+------------------------------------------+
+	[ck]：和没加索引的对比，加了索引后，type从all变成了index,"system > const > eq_ref > ref > range > index > all", 提高了一个等级。但多出了filesort,所以可以继续优化。
+	
+	
 	根据sql实际解析的顺序，调整索引的顺序
 	alter table book add index idx_ica(cateid,authorid,id);		虽然可以回表查询id，但是将id放到索引中可以提升使用using index
 	explain select id from book where cateid in(2,3) and authorid=1 order by cateid desc;
@@ -44,7 +51,8 @@
 	+----+-------------+-------+-------+---------------+---------+---------+------+------+--------------------------+
 	注意要把不需要的索引删除，以防对查询造成干扰。
 	drop index idx_cai on book;
-	再次优化(之前是index级别)	in有时候索引会失效	in失效，in后面的索引也会跟着失效
+	
+	再次优化(之前是index级别)	范围查询in有时候索引会失效	in失效，in后面的索引也会跟着失效，所以下面的优化是把in语句放在后面。
 	alter table book add index idx_aci(authorid,cateid,id);
 	mysql> explain select id from book where authorid=1 and cateid in(2,3) order by cateid desc;
 	+----+-------------+-------+------+---------------+---------+---------+-------+------+--------------------------+
@@ -57,7 +65,8 @@
 		索引需要逐步优化
 		将含in的查询放到where条件之后，以防失效，防止干扰前面。
 		本例中同时出现了using where(需要回原表)和using index(不需要回原表)，一半需要回，一半需要回(in失效了)，
-		authorid在索引idx_ica(cateid,authorid,id)中，不需要回原表，可以直接查找
+		authorid在索引idx_ica(cateid,authorid,id)中，不需要回原表，可以直接查找，但cateid是在in中使用，所以in使索引失效。
+		
 	explain select id from book where authorid=1 and cateid=3 order by cateid desc;
 	+----+-------------+-------+------+---------------+---------+---------+-------------+------+-------------+
 	| id | select_type | table | type | possible_keys | key     | key_len | ref         | rows | Extra       |

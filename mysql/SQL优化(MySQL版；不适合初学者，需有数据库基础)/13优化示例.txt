@@ -38,6 +38,7 @@ explain select a1,a2,a3,a4 from test03 where a1=1 and a4=4 order by a3;
 using filesort
 以上sql出现了using filesort，文件内排序，多了一次额外的排序或查找，本质，就是不要跨列使用(where 和 order by拼起来不要跨列)
 explain select a1,a2,a3,a4 from test03 where a1=1 and a4=4 order by a2,a3;
+[ck]：where 和 order by拼起来，a1+a4+a2+a3,索引顺序为a1,a2,a3. 这里a4不是索引，所以顺序一致。
 +----+-------------+--------+------+-----------------+-----------------+---------+-------+------+--------------------------+
 | id | select_type | table  | type | possible_keys   | key             | key_len | ref   | rows | Extra                    |
 +----+-------------+--------+------+-----------------+-----------------+---------+-------+------+--------------------------+

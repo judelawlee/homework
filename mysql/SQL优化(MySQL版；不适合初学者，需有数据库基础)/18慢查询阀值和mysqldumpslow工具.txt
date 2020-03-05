@@ -13,19 +13,17 @@ select sleep(3);
 	# Query_time: 4.050513  Lock_time: 0.000000 Rows_sent: 1  Rows_examined: 0
 	SET timestamp=1565479744;
 	select sleep(4);
-(2)通过mysqldumpslow工具查看慢查询
+(2)通过mysqldumpslow工具查看慢查询，通过上面的日志查看不方便查看，所以推荐使用工具查看。
 	mysqldumpslow --help
 	s:指定是排序方式
 	r:逆序
 	l:锁定时间
 	g:正则匹配模式
 	可以通过一些过滤条件，快速查找出需要定位的慢sql
-	获取返回记录最多的3个sql
-	获取访问次数最多的3个sql
-	按照时间排序，前10条包含left join查询语句的sql
-		mysqldumpslow -s r -t 3 /var/lib/mysql/localhost-slow2.log 
-		mysqldumpslow -s c -t 3 /var/lib/mysql/localhost-slow2.log 
-		mysqldumpslow -s t -t 10 "left join" /var/lib/mysql/localhost-slow2.log 
+	获取返回记录最多的3个sql：mysqldumpslow -s r -t 3 /var/lib/mysql/localhost-slow2.log 
+	获取访问次数最多的3个sql：mysqldumpslow -s c -t 3 /var/lib/mysql/localhost-slow2.log 
+	按照时间排序，前10条包含left join查询语句的sql：mysqldumpslow -s t -t 10 -g "left join" /var/lib/mysql/localhost-slow2.log 		
+		
 	语法：
 		mysqldumpslow 各种参数 慢查询的日志文件
 

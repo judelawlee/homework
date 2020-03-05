@@ -4,29 +4,23 @@
 	select ... from table where 字段 in (子查询)
 	如果主查询的数据集大，则使用in，效率高
 	如果子查询的数据集大，则使用exist，效率高
+	
 	exist语法：将主查询的结果，放到子查询中进行调节校验，如果校验成功，则保留数据，如果校验不成功，则数据不保留。
 		看子查询是否有数据，如果有数据，则校验成功
 		select name from teacher where exists (select * from teacher);
-		+------+
-		| name |
-		+------+
-		| tl   |
-		| tw   |
-		| tx   |
-		| tx   |
-		| tz   |
-		+------+
 		等价于select * from teacher;
 		select name from teacher where exist (select * from teacher where id=9999);
 		empty set
+		
 	in：
 		select ... from table where id in (1,2,3);
 		select * A where id in(select id from B);
+		
 	(2)order by优化
 		using filesort 有两种算法：双路排序、单路排序(根据io的次数)
-			mysql4.1之前 默认使用双路排序；双路：扫描两次磁盘(1.从磁盘读取排序字段[进行排序，buffer内进行的] 2.扫描其他字段):
-			mysql4.1之后 默认使用单路排序：io比较消耗性能
-				单路排序：只读取一次(全部字段)，在buffer中进行排序。但此种单路排序会有一定的隐患，不一定真的是"单路",一次io，
+			mysql4.1之前 默认使用双路排序；双路：扫描两次磁盘(1.从磁盘读取排序字段[排序是在buffer缓冲区内进行的] 2.扫描其他字段):
+			mysql4.1之后 默认使用单路排序：因为双路io比较消耗性能
+				单路排序：只读取一次(全部字段)，在buffer中挑出排序字段进行排序。但此种单路排序会有一定的隐患，不一定真的是"单路",一次io，
 				可能是多次io。如果数据量特别，则无法将所有字段的数据一次性读取完毕，因此会进行分片读取，多次排序
 				注意：单路排序比双路排序占用更多的buffer。单路排序时，如果数据量大，可以考虑调大buffer的容量大小：
 					set max_length_for_sort_data=1024	单位字节
@@ -37,6 +31,7 @@
 		b.避免使用select * ... 即使是全部列，一一列出来也比*效率高，因为程序会计算*是什么东西，select * 很难索引覆盖
 		c.复合索引不要跨列使用，避免using filesort
 		d.尽量保证全部的排序字段，排序的一致性(都是升序或降序)
+		
 9.sql排查-慢查询日志:mysql提供的一种日志记录，用于记录mysql中响应时间超过阀值(long_query_time，默认10秒)
 	慢查询日志默认是关闭的；建议：开发调试时打开，而最终部署时关闭。
 	检查是否开启了慢查询日志：
@@ -47,7 +42,7 @@
 		| slow_query_log      | OFF                               |
 		| slow_query_log_file | /var/lib/mysql/localhost-slow.log |
 		+---------------------+-----------------------------------+
-	临时开启：	
+	临时开启（mysql关闭就会失效）：	
 		set global slow_query_log=1;	在内存里面开启
 		show variables like '%slow_query%';
 		+---------------------+-----------------------------------+

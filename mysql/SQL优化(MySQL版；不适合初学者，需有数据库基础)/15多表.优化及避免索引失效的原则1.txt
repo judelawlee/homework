@@ -19,6 +19,8 @@
 	insert into course values(2,'java');
 	insert into course values(3,'php');
 	commit;
+	
+	【ck】:开始优化
 	左连接
 		select * from teacher t left outer join course c on t.cid=c.id where c.name='java';
 		explain select * from teacher2 t left outer join course2 c on t.cid=c.id where c.name='java';
@@ -29,9 +31,9 @@
 		|  1 | SIMPLE      | c     | ALL  | PRIMARY       | NULL | NULL    | NULL |    3 | Using where; Using join buffer |
 		+----+-------------+-------+------+---------------+------+---------+------+------+--------------------------------+
 		索引往哪张表加？
-		小表驱动大表
+	结论：小表驱动大表
 		where 小表.x=大表.y;
-		小表：10
+	假设小表：10
 		大表：300
 		for(int i=0;i<10;i++){
 			for(int j=0;i<300;j++){
@@ -49,7 +51,7 @@
 		当编写 t.cid=c.id 时，将数据量小的表放左边(假设此事t表数据量少)
 		索引建立在经常使用的字段上。
 		本题由 t.cid=c.id 可知，t.id字段使用较频繁，因此在该字段上加索引。
-		一般情况对于左外连接给左表加索引，右外连接给右表加索引
+		一般情况对于左外连接给左表加索引(左外连接说明以左表为基准，左表的数据全部都要匹配，所以必然使用也就频繁，适合加索引)，右外连接给右表加索引
 		alter table teacher add index idx_id(cid);
 		explain select * from teacher2 t left outer join course2 c on t.cid=c.id where c.name='java';
 		+----+-------------+-------+-------+---------------+--------+---------+------+------+--------------------------------+
@@ -66,17 +68,21 @@
 		|  1 | SIMPLE      | c     | ref  | PRIMARY,idx_name | idx_name | 93      | const     |    1 | Using where; Using index |
 		|  1 | SIMPLE      | t     | ref  | idx_id           | idx_id   | 4       | myDB.c.id |    1 | Using index              |
 		+----+-------------+-------+------+------------------+----------+---------+-----------+------+--------------------------+
-	Using join buffer:extra的一个选项，说明mysql底层动你的sql了，你的sql写的太差，mysql看不下去去。作用mysql引擎使用了连接缓存。
+		Using join buffer:extra的一个选项，说明mysql底层动你的sql了，你的sql写的太差，mysql看不下去去。作用mysql引擎使用了连接缓存。
+	
 (3)三张表优化
 	a.小表驱动大表
 	b.索引建立在经常使用的字段上
+	
+	
 7.避免索引失效的一些原则				in	
 	复合索引
 		a.复合索引，不要跨列或无序使用(最佳左前缀)
-			(a,b,c)
+			(a,b,c)， 即where & order 字段的顺序尽量保持顺序a,b,c.
 		b.复合索引，尽量使用全索引匹配
 	不要在索引上进行任何操作(计算、函数、类型转换)，否则类型失效
 		select ... where a.x=...	假设a.x是索引
+		
 	select * from book where authorid=1 and cateid=2;	
 	explain select * from book where authorid=1 and cateid=2;		用到了2个索引
 	+----+-------------+-------+------+---------------+---------+---------+-------------+------+-------+
@@ -102,7 +108,9 @@
 	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
 	|  1 | SIMPLE      | book  | ALL  | NULL          | NULL | NULL    | NULL |    5 | Using where |
 	+----+-------------+-------+------+---------------+------+---------+------+------+-------------+
-	对于复合索引，如果左边索引失效，右边的索引索引失效	例如(a,b,c) b失效，b,c同时失效如果是单独的索引，则不会出现这个情况
+	
+	对于复合索引，如果左边索引失效，右边的索引索引失效	例如(a,b,c) b失效，b,c同时失效，C失效对a,b没有影响。
+	如果是单独的索引，则不会出现这个情况。。
 	drop index idx_aci on book;
 	alter table book add index idx_authorid(authorid);
 	alter table book add index idx_cateid(cateid);
@@ -112,6 +120,7 @@
 	+----+-------------+-------+------+---------------+------------+---------+-------+------+-------------+
 	|  1 | SIMPLE      | book  | ref  | idx_cateid    | idx_cateid | 4       | const |    2 | Using where |
 	+----+-------------+-------+------+---------------+------------+---------+-------+------+-------------+
+	
 	复合索引不能使用不等于(!=、<>)或is null(is not null)，否则自身已经右侧所有全部失效
 		select * from book where authorid=1 and cateid=2;
 		explain select * from book where authorid=1 and cateid=2;
