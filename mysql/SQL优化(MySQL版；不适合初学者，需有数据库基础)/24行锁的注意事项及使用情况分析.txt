@@ -1,23 +1,28 @@
 行锁注意事项
-	a.如果没有索引，则行锁转为表锁
+	a.如果没有索引，则行锁转为表锁（primary key也是一种索引）
 		show index from linelock;
 		alter table linelock add index idx_name(name);
+		
 		会话0：写操作
 			update table linelock set name='ai' where name='3';
-		会话1：
+		会话1：写操作，不同的数据
 			update table linelock set name='aiX' where name='4';
 		互不干扰
+		
 		commit
 		会话0：写操作
 			update table linelock set name='ai' where name=3;
-		会话1：
+		会话1：写操作，不同的数据
 			update table linelock set name='aiX' where name=4;		
-		--锁住了	4被阻塞了(加锁)
-		--如果索引发送了类型转换，则索引失效。因此，此次操作会从行锁转为表锁。
+		--锁住了，可以发现数据被阻塞了(加锁)
+		--原因：如果索引发送了类型转换，则索引失效。因此，此次操作会从行锁转为表锁。
 		表锁也可以通过事务解锁。
+		
 	b.行锁的一种特殊情况：间隙锁：值在范围内但却不存在
 		此时linelock表中没有id=7的数据
-		update linelock set name='x' where id>1 and id<9;	即在次where范围中，没有id=7的数据，则id=7的数据成为间隙。
+		
+		update linelock set name='x' where id>1 and id<9;
+		即在次where范围中，没有id=7的数据，则id=7的数据成为间隙。
 		间隙：mysql会自动给间隙加锁->间隙锁。即本题会自动id=7的数据加间隙锁。
 			insert into linelock values(7,'a7');	锁住了
 		行锁：如果有where，则实际加锁的范围，就是where后面的范围，不是实际的值。
@@ -25,11 +30,11 @@
 		innodb默认采用行锁
 		缺点：比表锁性能损耗大。
 		优点：并发能力强，效率高。
-		因此建议，高并发采用innodb，否则采用myisam
+		因此建议，高并发采用innodb，否则采用myisam（在现在的互联网环境下，基本上都是在关注innodb）
 	行锁分析：
 		show status like '%innodb_row_lock%'
 			innodb_row_lock_current_waits:当前正在等待锁的数量
-			innodb_row_lock_time:等待总时长。从系统启动到现在，一共等待的时间
+			innodb_row_lock_time:等待总时长。从系统启动到现在，一共等待的时间(也就是锁定的时间)
 			innodb_row_lock_time_avg:等待平均时长。从系统启动到现在平均等待的时间
 			innodb_row_lock_max:最大等待时长。从系统启动到现在最大一次等待的时间
 			innodb_row_lock_waits:等待次数。从系统启动到现在一共等待的次数

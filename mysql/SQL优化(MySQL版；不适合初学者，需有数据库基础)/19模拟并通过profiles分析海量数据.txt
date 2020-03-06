@@ -31,7 +31,8 @@
 				return return_str;
 			end $
 			如果报错syntax，说明sql语句语法有错，需要修改sql语句
-			存储过程和存储函数在创建时与之前开启的慢查询日志冲突了。
+			
+			存储过程和存储函数在创建时与之前开启的慢查询日志冲突了。（即开启慢查询日志和创建冲突了）
 			解决冲突：
 			临时解决(需要开启log_bin_trust_function_creators)
 				show variables like '%log_bin_trust_function_creators%'
@@ -81,6 +82,8 @@
 			delimiter ;
 			call insert_emp(0,800000);
 			call insert_dept(0,30);
+			
+【ck】以上都是创建海量数据，以下开始分析海量数据。			
 	b.分析海量数据
 		show profiles;	默认是关闭的
 		show variables like 'profiling'
@@ -103,7 +106,7 @@
 		| profiling              | ON    |
 		| profiling_history_size | 15    |
 		+------------------------+-------+
-		show profiles:会记录所有show profiles打开后执行的sql所花费的时间
+		show profiles:会记录所有show profiles打开后执行的sql所花费的时间（即需要set profiling = on;把profiling打开）
 			不够精确io、cpu、内存，是总攻的。
 		精确分析：sql诊断
 			show profile all for query 上一步查询到的queryid

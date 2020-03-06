@@ -1,5 +1,5 @@
 分析表锁定：
-	查看哪些表加了锁：show open tables;	1代表被加了锁
+	查看哪些表加了锁：show open tables;	1代表被加了锁，0代表没有加锁。
 	分析表锁定的验证程度：show status like 'table%';
 		show status like 'table%';
 		+-----------------------+-------+
@@ -10,28 +10,36 @@
 		+-----------------------+-------+
 		table_locks_immediate：即可能获取到的锁
 		table_locks_waited：需要等待的表锁数(如果该值越大，说明存在越大的锁竞争)
+		
 		一般建议：
 			table_locks_immediate/table_locks_waited>5000，建议采用innodb引擎，否则采用myisam。
+			
 行锁(innodb)
 	create table linelock(
 		id int primary key auto_increment,
 		name varchar(20)
 	)engine=innodb;
+	//innodb使用的就是行锁
 	insert into linelock(name) values('1');
 	insert into linelock(name) values('2');
 	insert into linelock(name) values('3');
 	insert into linelock(name) values('4');
 	insert into linelock(name) values('5');
 		--mysql默认自动commit,oracle默认不会自动commit
+		
 	为了研究行锁，暂时将自动commit关闭，set autocommit=0;以后需要手动commit
+	
 		会话0：insert into linelock(name) values('a6');	前
+		
 		会话1：update linelock set name='ax' where id=6;	后
 			更新时发现次数据被加锁了。知道其他会话将该锁释放(commit/rollback)后，才能操作。
 			就跟买衣服一样，要就是commit，不要就是rollback
+			
 		对行锁情况：
-			1.如果会话x对某条数据a进行dml操作(研究时：关闭了自动commit的情况下)，则其他会话必须等待会话x结束事务(commit/rollback)后，
+			1.如果会话x对某条数据a进行dml操作(dml:增删改操作)(研究时：关闭了自动commit的情况下)，则其他会话必须等待会话x结束事务(commit/rollback)后，
 				才能对数据a进行dml操作
-			2.表锁是通过unlock tables;行锁是通过事务解锁。
+			2.表锁是通过unlock tables;行锁是通过事务解锁（即commit/rollback命令）。
+			
 		行锁，操作不同数据：
 			会话0：写操作
 				insert into linelock values(8,'a8');
